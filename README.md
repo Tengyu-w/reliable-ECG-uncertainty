@@ -50,6 +50,9 @@ experiments, and review-routing conclusions, see
 For the research version history, see
 [docs/PROJECT_EVOLUTION.md](docs/PROJECT_EVOLUTION.md).
 
+For a section-by-section audit against the integrated Word report, see
+[docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md](docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md).
+
 ## Public Evidence
 
 The public evidence layer contains only aggregate tables and figures. It does

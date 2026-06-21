@@ -8,6 +8,11 @@ Private review examples, raw ECG waveform galleries, model checkpoints,
 embeddings, and window-level prediction files are not included. The public
 figures and tables are aggregate evidence only.
 
+A section-by-section coverage audit against the integrated Word report is
+available in `docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md`. That audit explains
+which experimental stages are fully represented in the public repository and
+which sample-level materials are intentionally summarized rather than uploaded.
+
 ## 1. Research Framing
 
 The project starts from a practical weakness of accuracy-only ECG
