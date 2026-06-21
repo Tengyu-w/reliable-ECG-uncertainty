@@ -1,0 +1,20 @@
+* text=auto
+
+*.md text eol=lf
+*.py text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.mjs text eol=lf
+
+*.mat binary
+*.pt binary
+*.pth binary
+*.npz binary
+*.docx binary
+*.pdf binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+

@@ -1,0 +1,50 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Raw or derived ECG data
+RHYTHMS.mat
+data/*
+!data/README.md
+
+# Model weights, embeddings, and run logs
+*.pt
+*.pth
+*.ckpt
+*.npz
+*.log
+
+# Large generated experiment trees
+outputs/
+report/
+results/
+tools/
+scripts/
+AGENTS.md
+CODE_FUNCTION_MAP_CN.md
+INNOVATION_AND_CODE_REVIEW_CN.md
+src/AGENTS.md
+src/action_outcome_supervisor.py
+docs/GITHUB_UPLOAD_PLAN_CN.md
+
+# Generated binary reports and presentations
+report/**/*.docx
+report/**/*.pdf
+report/**/*.pptx
+report/safety_supervisor/
+report/v6_compendium_assets_20260620/
+report/teacher_presentation_20260607/
+
+# Review material may contain restricted or re-identification information
+doctor_review_examples/
