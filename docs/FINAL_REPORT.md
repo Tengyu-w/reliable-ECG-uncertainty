@@ -171,7 +171,31 @@ The main research contribution is not a single model. It is the reliability
 framing: the project asks whether the model can identify the ECG windows where
 automation is least trustworthy.
 
-## 9. Limitations
+## 9. Negative Results
+
+The project includes negative and mixed results because they are part of the
+research evidence.
+
+- Stronger classification did not always imply stronger review routing.
+  ResNet1D-12 was competitive as a classifier, but at a 10% review budget it
+  captured only 38.3% of VT/VF boundary errors under the Boundary-LRII policy.
+- Some uncertainty scores were weak for ordinary error detection. The energy
+  score was especially poor in the selected public summary, and prototype or
+  Mahalanobis distances were not consistently strong for CNN error detection.
+- Multi-source risk evidence was not automatically better. Hand-weighted
+  combinations can dilute the VT/VF boundary signal if the weights are not
+  aligned with the review objective.
+- Several paired comparisons remain statistically uncertain because they use
+  three seeds. Some confidence intervals cross zero, so the evidence should be
+  treated as preliminary.
+- Calibration is useful but not sufficient. Temperature scaling and ECE should
+  be interpreted alongside review capture, OOD response, and boundary errors.
+
+These results make the project more useful as a research prototype: they show
+where the reliability hypothesis held, where it weakened, and which assumptions
+need stronger validation.
+
+## 10. Limitations
 
 The current evidence is limited in several important ways:
 
@@ -186,7 +210,7 @@ The current evidence is limited in several important ways:
 These limitations are part of the research record rather than something to hide.
 They define the next validation steps.
 
-## 10. Next Steps
+## 11. Next Steps
 
 The most important next steps are:
 

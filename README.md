@@ -35,6 +35,9 @@ Key ideas:
   lower-risk windows and routes higher-risk windows for review;
 - multi-seed paired summaries, reported cautiously because the current paired
   intervention comparison uses three seeds.
+- negative and mixed results are reported explicitly, including weak
+  uncertainty scores, review-routing failures, and statistically uncertain
+  paired comparisons.
 
 For the full research narrative, see
 [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md).
@@ -126,6 +129,10 @@ ethics status, and access procedure should be documented in
 - Current evidence comes from an internal ECG dataset and synthetic corruption
   tests.
 - The paired intervention comparison uses three paired random seeds.
+- Some methods were weak or unstable: energy-based error detection was poor in
+  the selected summaries, stronger classifiers did not always rank VT/VF
+  boundary errors well for review, and several paired confidence intervals cross
+  zero.
 - Window-level classification should not be interpreted as patient-level
   diagnosis.
 - External-dataset and clinical validation have not been performed.

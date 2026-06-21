@@ -396,7 +396,73 @@ workflow:
 8. test mitigation and risk-distillation ideas;
 9. report limits instead of overstating the evidence.
 
-## 15. Limitations
+## 15. Negative Results And Failure Modes
+
+The negative results are important because they prevent the project from reading
+like a polished success story. Several experiments did not support the simplest
+version of the original hypothesis.
+
+### 15.1 Stronger classification did not always mean better review routing
+
+ResNet1D-12 is competitive as a classifier, but it is weaker under a strict
+review-routing budget. At a 10% review budget, the Boundary-LRII routing policy
+captured only 38.3% of VT/VF boundary errors for ResNet1D-12, compared with
+72.9% for CNN-10, 82.0% for TCN-20, and 75.0% for RegularityFusion-12.
+
+This is a useful failure mode: a stronger backbone can still be a poorer
+ranking model for safety-relevant review. It supports the decision to evaluate
+review capture directly instead of assuming that accuracy implies reliability.
+
+### 15.2 Some uncertainty scores were weak or inverted
+
+Not every uncertainty score was useful. In the public uncertainty table, the
+energy score produced very low error-detection AUROC for several models
+(for example, about 0.10 for CNN-10 and 0.05 for TCN-20). Prototype distance and
+Mahalanobis distance were also weak for ordinary CNN misclassification detection
+in the selected summary.
+
+The conclusion is not that embedding scores are always better. A more accurate
+interpretation is that different scores respond to different failure mechanisms:
+softmax scores can be strong for ordinary error detection, while embedding
+scores can be more useful for atypicality or shift.
+
+### 15.3 Multi-source risk evidence did not automatically improve routing
+
+The RISK experiments showed that simply adding more reliability evidence is not
+guaranteed to help. If a hand-weighted target dilutes the VT/VF boundary signal,
+the review-ranking objective can get worse. This changed the research framing:
+review routing should be validation-aligned, not a naive average of all
+available uncertainty signals.
+
+### 15.4 Several paired comparisons remain statistically uncertain
+
+The current paired comparisons use three seeds. Some mean effects are promising,
+but several confidence intervals still cross zero. For example, prototype
+separation reduced mean VT/VF cross-errors, but the 95% confidence interval for
+that reduction still crosses zero in the public paired classification summary.
+
+Similarly, full-supervisor routing reduced mean VT/VF cross-error counts in the
+automatic route, but the seed-level differences include a case where the
+comparison worsened for one seed. This is exactly why the repository reports
+seed-level differences instead of only mean values.
+
+### 15.5 Calibration and temperature scaling were not uniformly beneficial
+
+Temperature scaling and calibration metrics should be interpreted carefully.
+Some models improved under calibration-like adjustment, while others showed
+mixed behaviour depending on whether the metric is ECE, NLL, or downstream
+review capture. Calibration is therefore treated as one reliability view, not as
+a complete solution.
+
+### 15.6 Some evidence is intentionally not public
+
+The local project contains qualitative case studies, boundary waveform
+galleries, and risk evidence cards. These are useful for internal analysis, but
+they are not suitable for this public-facing repository because they are closer
+to sample-level ECG evidence. The public version keeps aggregate figures and
+tables instead.
+
+## 16. Limitations
 
 The current evidence remains limited:
 

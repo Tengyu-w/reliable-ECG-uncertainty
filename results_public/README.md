@@ -47,6 +47,9 @@ summary_tables/paired_review_routing_comparisons.csv
 - The paired comparisons use three random seeds.
 - The figures are intended to summarise the research direction, not to claim
   clinical validation.
+- Negative and mixed results are part of the public evidence layer; the tables
+  include weak uncertainty scores, unstable paired effects, and review-routing
+  cases where stronger classifiers did not produce better safety ranking.
 - Full run directories, model weights, embeddings, and generated reports are
   kept out of version control.
 - The extended figure atlas is public-safe aggregate evidence, not a complete
