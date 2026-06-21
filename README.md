@@ -47,6 +47,9 @@ for the embedding/PCA analysis, uncertainty comparisons, OOD tests, PRO/RISK
 experiments, and review-routing conclusions, see
 [docs/COMPLETE_EXPERIMENT_COMPENDIUM.md](docs/COMPLETE_EXPERIMENT_COMPENDIUM.md).
 
+For the research version history, see
+[docs/PROJECT_EVOLUTION.md](docs/PROJECT_EVOLUTION.md).
+
 ## Public Evidence
 
 The public evidence layer contains only aggregate tables and figures. It does
