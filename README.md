@@ -39,6 +39,11 @@ Key ideas:
 For the full research narrative, see
 [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md).
 
+For a more detailed experiment-by-experiment account, including the rationale
+for the embedding/PCA analysis, uncertainty comparisons, OOD tests, PRO/RISK
+experiments, and review-routing conclusions, see
+[docs/COMPLETE_EXPERIMENT_COMPENDIUM.md](docs/COMPLETE_EXPERIMENT_COMPENDIUM.md).
+
 ## Public Evidence
 
 The public evidence layer contains only aggregate tables and figures. It does
@@ -50,7 +55,9 @@ files, or private review examples.
 ![Review routing summary](results_public/figures/review_routing_vtvf_capture.png)
 
 Additional figures and summary tables are available in
-[results_public/](results_public/README.md).
+[results_public/](results_public/README.md). The extended public figure atlas is
+available in
+[results_public/figures_compendium/](results_public/figures_compendium/README.md).
 
 ## Repository Structure
 
@@ -60,6 +67,9 @@ src/                      Core training, uncertainty, calibration, OOD,
 docs/                     Research report, method overview, data statement,
                           and experiment pipeline
 results_public/           Curated aggregate figures and summary tables only
+results_public/figures_compendium/
+                          Extended public-safe figure atlas from the integrated
+                          experiment report
 data/README.md            Dataset access note; raw ECG data are not distributed
 requirements.txt          Minimal Python dependencies
 ```

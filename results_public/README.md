@@ -8,12 +8,28 @@ predictions, or private review examples.
 
 ## Figures
 
+Main summary figures:
+
 ```text
 figures/model_performance_summary.png
 figures/embedding_geometry_distances.png
 figures/uncertainty_error_detection.png
 figures/review_routing_vtvf_capture.png
 ```
+
+Extended public-safe figure atlas extracted from the integrated experiment
+report:
+
+```text
+figures_compendium/
+```
+
+This atlas contains projection galleries, uncertainty/review curves, regularity
+feature figures, full-spectrum shift and severity figures, PRO/RISK evidence,
+risk-head results, and ablation visuals.
+
+It intentionally excludes private review examples, raw ECG waveform case
+galleries, and raw image archive material.
 
 ## Summary Tables
 
@@ -33,4 +49,5 @@ summary_tables/paired_review_routing_comparisons.csv
   clinical validation.
 - Full run directories, model weights, embeddings, and generated reports are
   kept out of version control.
-
+- The extended figure atlas is public-safe aggregate evidence, not a complete
+  dump of all local experiment artifacts.

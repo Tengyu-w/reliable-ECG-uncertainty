@@ -8,6 +8,11 @@ failure mode is not just a wrong prediction in the aggregate test set. A more
 specific concern is VT/VF cross-classification, where two ventricular rhythms
 can occupy a close boundary in the learned representation space.
 
+For the full experiment-by-experiment evidence narrative, see
+[COMPLETE_EXPERIMENT_COMPENDIUM.md](COMPLETE_EXPERIMENT_COMPENDIUM.md). For the
+extended public-safe figure atlas, see
+[../results_public/figures_compendium/README.md](../results_public/figures_compendium/README.md).
+
 The main research question is:
 
 > Can an ECG classifier identify windows where its SR/VT/VF prediction is
