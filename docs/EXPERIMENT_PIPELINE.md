@@ -1,7 +1,9 @@
 # Experiment Pipeline
 
 This document maps the codebase to the intended experiment order. The Python
-modules are kept modular, while the research workflow is ordered here.
+modules are kept modular so imports and reproduction commands stay stable,
+while the research workflow is ordered here. The stages mirror the main report
+in `docs/RESEARCH_REPORT.md`.
 
 ## 1. Data Inspection And Split Audit
 
@@ -113,10 +115,34 @@ Relevant files:
 - `src/regularity_feature_ablation.py`
 - `src/gate_analysis.py`
 
-## 7. Review Routing And Risk Heads
+## 7. PRO Boundary Intervention
+
+Purpose: test whether representation-level boundary intervention can reduce
+VT/VF cross-errors or make boundary risk easier to route for review. In the
+final report, PRO is interpreted cautiously as boundary-structure analysis, not
+as a fully solved method.
+
+```powershell
+python -m src.pro_geometry_comparison --root results
+python -m src.run_core_intervention_pipeline --mat RHYTHMS.mat
+python -m src.run_mitigation_experiments --mat RHYTHMS.mat
+python -m src.run_auxiliary_intervention_matrix --mat RHYTHMS.mat
+```
+
+Relevant files:
+
+- `src/pro_geometry_comparison.py`
+- `src/run_core_intervention_pipeline.py`
+- `src/run_mitigation_experiments.py`
+- `src/run_auxiliary_intervention_matrix.py`
+- `src/aggregate_mitigation_results.py`
+- `src/aggregate_auxiliary_robustness.py`
+
+## 8. Review Routing, Conformal Baselines, And RISK
 
 Purpose: convert reliability scores into review decisions and evaluate error
-capture at fixed review budgets.
+capture at fixed review budgets. This stage includes conformal prediction-set
+baselines and RISK review-score distillation.
 
 ```powershell
 python -m src.reliability_map --run-dir results\<run-name>
@@ -146,23 +172,30 @@ Relevant files:
 - `src/fine_tune_risk_head.py`
 - `src/risk_head_review_analysis.py`
 - `src/evaluate_risk_corruption_robustness.py`
+- `src/select_deployable_risk_weights.py`
+- `src/aggregate_risk_versions.py`
+- `src/aggregate_risk_corruption_robustness.py`
 
-## 8. Multi-Seed And Aggregate Summaries
+## 9. Multi-Seed, Duplicate-Family, And Aggregate Summaries
 
-Purpose: avoid relying on a single split or single random seed.
+Purpose: avoid relying on a single split, a single random seed, or
+over-optimistic window-level evidence. This stage includes the V6 evidence
+discipline: duplicate-family audit, six-direction error analysis, and
+record-cluster statistics.
 
 ```powershell
+python -m src.audit_duplicate_family_splits --mat RHYTHMS.mat
 python -m src.run_multiseed_experiments --mat RHYTHMS.mat
 python -m src.aggregate_multiseed_results --manifest results\<manifest.csv>
 python -m src.seedwise_statistical_summary --root results
+python -m src.error_type_routing_analysis --root results
+python -m src.record_cluster_statistics --root results
 ```
 
 Additional matrix runners:
 
 ```powershell
 python -m src.run_core_validation_matrix --mat RHYTHMS.mat
-python -m src.run_core_intervention_pipeline --mat RHYTHMS.mat
-python -m src.run_auxiliary_intervention_matrix --mat RHYTHMS.mat
 python -m src.run_deployable_risk_ablation --mat RHYTHMS.mat
 ```
 
@@ -170,16 +203,16 @@ Relevant files:
 
 - `src/run_analysis_suite.py`
 - `src/run_multiseed_experiments.py`
+- `src/audit_duplicate_family_splits.py`
+- `src/duplicate_leakage_sensitivity.py`
 - `src/run_core_validation_matrix.py`
-- `src/run_core_intervention_pipeline.py`
-- `src/run_auxiliary_intervention_matrix.py`
 - `src/run_deployable_risk_ablation.py`
 - `src/aggregate_multiseed_results.py`
 - `src/aggregate_core_validation.py`
-- `src/aggregate_mitigation_results.py`
-- `src/aggregate_auxiliary_robustness.py`
 - `src/aggregate_risk_corruption_robustness.py`
 - `src/seedwise_statistical_summary.py`
+- `src/error_type_routing_analysis.py`
+- `src/record_cluster_statistics.py`
 
 ## Notes
 

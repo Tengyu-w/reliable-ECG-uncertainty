@@ -1,0 +1,23 @@
+# Risk Head, Supervisor, And Ablation Evidence
+
+Risk-head, supervisor, and ablation curves for review-oriented reliability.
+
+## Contact Sheet
+
+![Contact sheet](contact_sheet.png)
+
+## Included Figures
+
+1. [`fig_054_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_054_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+2. [`fig_055_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_055_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+3. [`fig_056_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_056_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+4. [`fig_057_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_057_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+5. [`fig_058_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_058_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+6. [`fig_059_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_059_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+7. [`fig_060_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_060_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+8. [`fig_061_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_061_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+9. [`fig_062_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_062_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+10. [`fig_063_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_063_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+11. [`fig_064_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_064_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+12. [`fig_065_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_065_8_Risk_head_safety_supervisor_and_ablation_evidence.png)
+13. [`fig_066_8_Risk_head_safety_supervisor_and_ablation_evidence.png`](individual_figures/fig_066_8_Risk_head_safety_supervisor_and_ablation_evidence.png)

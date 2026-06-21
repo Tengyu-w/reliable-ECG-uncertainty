@@ -11,7 +11,7 @@ can occupy a close boundary in the learned representation space.
 For the full experiment-by-experiment evidence narrative, see
 [COMPLETE_EXPERIMENT_COMPENDIUM.md](COMPLETE_EXPERIMENT_COMPENDIUM.md). For the
 extended public-safe figure atlas, see
-[../results_public/figures_compendium/README.md](../results_public/figures_compendium/README.md).
+[../results_public/figures/README.md](../results_public/figures/README.md).
 
 The main research question is:
 
@@ -34,7 +34,7 @@ appear across train, validation, and test sets.
 Public summary statistics retained in this repository:
 
 ```text
-results_public/summary_tables/dataset_split_statistics.csv
+results_public/tables/dataset_split_statistics.csv
 ```
 
 These statistics describe the aggregate split composition only. They do not
@@ -66,19 +66,19 @@ need for reliability analysis. Macro-F1 and class-specific behaviour remain
 important because SR is more frequent and easier to separate than the VT/VF
 boundary.
 
-![Model performance](../results_public/figures/model_performance_summary.png)
+![Model performance](../results_public/figures/00_summary/model_performance_summary.png)
 
 The embedding geometry analysis supports the same conclusion. Across the
 selected models, the normalised VT/VF centroid distance is much smaller than
 the SR-VT or SR-VF distances. This suggests that VT and VF form the most
 important boundary for uncertainty-aware analysis.
 
-![Embedding geometry](../results_public/figures/embedding_geometry_distances.png)
+![Embedding geometry](../results_public/figures/00_summary/embedding_geometry_distances.png)
 
 The corresponding aggregate table is:
 
 ```text
-results_public/summary_tables/model_performance_and_geometry.csv
+results_public/tables/model_performance_and_geometry.csv
 ```
 
 ## 5. Uncertainty And Calibration
@@ -99,12 +99,12 @@ atypical samples and distribution shift. The evidence does not justify a simple
 claim that one uncertainty family is always superior. The safer conclusion is
 that different scores detect different failure mechanisms.
 
-![Uncertainty error detection](../results_public/figures/uncertainty_error_detection.png)
+![Uncertainty error detection](../results_public/figures/00_summary/uncertainty_error_detection.png)
 
 Public table:
 
 ```text
-results_public/summary_tables/uncertainty_error_detection.csv
+results_public/tables/uncertainty_error_detection.csv
 ```
 
 ## 6. Review-Oriented Reliability
@@ -119,7 +119,7 @@ This directly tests the practical reliability question:
 > If only 10-30% of ECG windows can be reviewed, how many VT/VF boundary errors
 > can be captured?
 
-![Review routing](../results_public/figures/review_routing_vtvf_capture.png)
+![Review routing](../results_public/figures/00_summary/review_routing_vtvf_capture.png)
 
 Representative aggregate result:
 
@@ -133,7 +133,7 @@ Representative aggregate result:
 Public table:
 
 ```text
-results_public/summary_tables/review_routing_boundary_lrii.csv
+results_public/tables/review_routing_boundary_lrii.csv
 ```
 
 ## 7. Multi-Seed And Paired Evidence
@@ -145,8 +145,8 @@ deployment claims.
 The public paired summaries are:
 
 ```text
-results_public/summary_tables/paired_classification_comparisons.csv
-results_public/summary_tables/paired_review_routing_comparisons.csv
+results_public/tables/paired_classification_comparisons.csv
+results_public/tables/paired_review_routing_comparisons.csv
 ```
 
 One representative finding is that prototype-separation training improved mean

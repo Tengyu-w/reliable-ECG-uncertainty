@@ -1,0 +1,20 @@
+# Uncertainty, Calibration, And Review Curves
+
+Uncertainty, ambiguity, selective prediction, and review-routing curves from best-model analysis.
+
+## Contact Sheet
+
+![Contact sheet](contact_sheet.png)
+
+## Included Figures
+
+1. [`fig_027_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_027_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+2. [`fig_028_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_028_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+3. [`fig_029_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_029_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+4. [`fig_030_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_030_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+5. [`fig_031_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_031_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+6. [`fig_032_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_032_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+7. [`fig_033_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_033_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+8. [`fig_034_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_034_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+9. [`fig_035_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_035_5_Best_model_uncertainty_ambiguity_and_review_curves.png)
+10. [`fig_036_5_Best_model_uncertainty_ambiguity_and_review_curves.png`](individual_figures/fig_036_5_Best_model_uncertainty_ambiguity_and_review_curves.png)

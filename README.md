@@ -39,13 +39,16 @@ Key ideas:
   uncertainty scores, review-routing failures, and statistically uncertain
   paired comparisons.
 
-For the full research narrative, see
-[docs/FINAL_REPORT.md](docs/FINAL_REPORT.md).
+For the full stage-ordered research report, see
+[docs/RESEARCH_REPORT.md](docs/RESEARCH_REPORT.md).
 
 For a more detailed experiment-by-experiment account, including the rationale
 for the embedding/PCA analysis, uncertainty comparisons, OOD tests, PRO/RISK
 experiments, and review-routing conclusions, see
 [docs/COMPLETE_EXPERIMENT_COMPENDIUM.md](docs/COMPLETE_EXPERIMENT_COMPENDIUM.md).
+
+For the organized public figure atlas, see
+[docs/FIGURE_ATLAS.md](docs/FIGURE_ATLAS.md).
 
 For the research version history, see
 [docs/PROJECT_EVOLUTION.md](docs/PROJECT_EVOLUTION.md).
@@ -59,14 +62,13 @@ The public evidence layer contains only aggregate tables and figures. It does
 not include raw ECG signals, model weights, embeddings, window-level prediction
 files, or private review examples.
 
-![Model performance summary](results_public/figures/model_performance_summary.png)
+![Model performance summary](results_public/figures/00_summary/model_performance_summary.png)
 
-![Review routing summary](results_public/figures/review_routing_vtvf_capture.png)
+![Review routing summary](results_public/figures/00_summary/review_routing_vtvf_capture.png)
 
-Additional figures and summary tables are available in
-[results_public/](results_public/README.md). The extended public figure atlas is
-available in
-[results_public/figures_compendium/](results_public/figures_compendium/README.md).
+Additional figures and tables are available in
+[results_public/](results_public/README.md). The public figures are grouped by
+experiment stage in [results_public/figures/](results_public/figures/README.md).
 
 ## Repository Structure
 
@@ -75,10 +77,8 @@ src/                      Core training, uncertainty, calibration, OOD,
                           boundary, and review-routing code
 docs/                     Research report, method overview, data statement,
                           and experiment pipeline
-results_public/           Curated aggregate figures and summary tables only
-results_public/figures_compendium/
-                          Extended public-safe figure atlas from the integrated
-                          experiment report
+results_public/tables/    Curated aggregate summary tables only
+results_public/figures/   Public-safe figure atlas grouped by experiment stage
 data/README.md            Dataset access note; raw ECG data are not distributed
 requirements.txt          Minimal Python dependencies
 ```

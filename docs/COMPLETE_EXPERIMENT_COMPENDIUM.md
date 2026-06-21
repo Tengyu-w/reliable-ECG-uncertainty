@@ -64,7 +64,7 @@ dataset is not redistributed.
 The public split summary is:
 
 ```text
-results_public/summary_tables/dataset_split_statistics.csv
+results_public/tables/dataset_split_statistics.csv
 ```
 
 The split is evaluated at the level of source records, not only windows. Later
@@ -89,10 +89,10 @@ calibration, OOD, embedding, and review-routing modules.
 The public model summary is:
 
 ```text
-results_public/summary_tables/model_performance_and_geometry.csv
+results_public/tables/model_performance_and_geometry.csv
 ```
 
-![Model performance](../results_public/figures/model_performance_summary.png)
+![Model performance](../results_public/figures/00_summary/model_performance_summary.png)
 
 Interpretation:
 
@@ -123,21 +123,21 @@ inspected:
 The public geometry summary is:
 
 ```text
-results_public/summary_tables/model_performance_and_geometry.csv
+results_public/tables/model_performance_and_geometry.csv
 ```
 
-![Embedding distances](../results_public/figures/embedding_geometry_distances.png)
+![Embedding distances](../results_public/figures/00_summary/embedding_geometry_distances.png)
 
 The full public projection gallery is available here:
 
 ```text
-results_public/figures_compendium/
+results_public/figures/01_embedding_pca/
 ```
 
 See the rendered image index:
 
 ```text
-results_public/figures_compendium/README.md
+results_public/figures/README.md
 ```
 
 Main conclusion:
@@ -171,10 +171,10 @@ Scores include:
 The public uncertainty table is:
 
 ```text
-results_public/summary_tables/uncertainty_error_detection.csv
+results_public/tables/uncertainty_error_detection.csv
 ```
 
-![Uncertainty error detection](../results_public/figures/uncertainty_error_detection.png)
+![Uncertainty error detection](../results_public/figures/00_summary/uncertainty_error_detection.png)
 
 Interpretation:
 
@@ -207,7 +207,7 @@ test accuracy is strong.
 The complete public shift and severity figures are included in:
 
 ```text
-results_public/figures_compendium/
+results_public/figures/04_ood_corruption/
 ```
 
 Main conclusion:
@@ -263,10 +263,10 @@ src/runtime_supervisor.py
 The public review-routing table is:
 
 ```text
-results_public/summary_tables/review_routing_boundary_lrii.csv
+results_public/tables/review_routing_boundary_lrii.csv
 ```
 
-![Review routing](../results_public/figures/review_routing_vtvf_capture.png)
+![Review routing](../results_public/figures/00_summary/review_routing_vtvf_capture.png)
 
 Representative evidence:
 
@@ -300,7 +300,7 @@ src/seedwise_statistical_summary.py
 The public paired classification table is:
 
 ```text
-results_public/summary_tables/paired_classification_comparisons.csv
+results_public/tables/paired_classification_comparisons.csv
 ```
 
 Main conclusion:
@@ -334,7 +334,7 @@ score averaging problem.
 The public paired review-routing table is:
 
 ```text
-results_public/summary_tables/paired_review_routing_comparisons.csv
+results_public/tables/paired_review_routing_comparisons.csv
 ```
 
 ## 12. Conformal And Prediction-Set Baselines
@@ -362,15 +362,14 @@ The repository now includes a larger public evidence layer:
 
 ```text
 results_public/figures/
-results_public/figures_compendium/
-results_public/summary_tables/
+results_public/tables/
 ```
 
 The compendium figure set contains the public-safe experimental images extracted
 from the integrated Word report:
 
 ```text
-results_public/figures_compendium/README.md
+results_public/figures/README.md
 ```
 
 This includes projection galleries, uncertainty and calibration figures,
