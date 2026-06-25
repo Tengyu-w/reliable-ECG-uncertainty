@@ -34,9 +34,9 @@ In particular, the current interpretation is:
 - All claims are internal research evidence only; external clinical validation
   has not been performed.
 
-## Supervisor / PhD Application Entry
+##  Application Entry
 
-If you are reviewing this repository for PhD fit, start here:
+ start here:
 
 1. [Application index](docs/APPLICATION_INDEX.md)
 2. [PhD application project brief](docs/phd_application_project_brief.md)
