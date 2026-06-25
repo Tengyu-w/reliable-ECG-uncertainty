@@ -40,11 +40,24 @@ tables/uncertainty_error_detection.csv
 tables/review_routing_boundary_lrii.csv
 tables/paired_classification_comparisons.csv
 tables/paired_review_routing_comparisons.csv
+tables/duplicate_family_baseline_pro_summary.csv
+tables/duplicate_family_selected_risk_review_aggregate.csv
+tables/duplicate_family_pro_error_migration_mean_std.csv
+tables/duplicate_family_risk_error_type_capture_mean_std.csv
+tables/duplicate_family_risk_record_cluster_ci.csv
 ```
+
+The `duplicate_family_*` tables are the current final GitHub evidence. The
+older paired comparison tables are retained as historical V3/V4/V5 evidence and
+should not be used to claim that PRO is a stable final improvement.
 
 ## Interpretation Notes
 
 - The paired comparisons use three random seeds.
+- The final duplicate-family summaries also use three random seeds and should
+  be interpreted as internal research evidence.
+- Current GitHub positioning treats PRO as boundary-structure/error-migration
+  evidence and RISK as the main deployable review-routing contribution.
 - The figures are intended to summarise the research direction, not to claim
   clinical validation.
 - Negative and mixed results are part of the public evidence layer; the tables

@@ -1,0 +1,7 @@
+method,seed,run_dir,accuracy,macro_f1,ece,vtvf_cross_errors,total_errors,sr_as_vt,sr_as_vf,vt_as_vf,vf_as_vt,vt_as_sr,vf_as_sr
+baseline,42,results\duplicate_family_final_20260620\20260620_181945_reliability_gated_fusion_dfinal_baseline_seed42_retry,0.9239389604196471,0.7617530041024989,0.04446208040004811,193,319,6,12,129,64,104,4
+baseline,43,results\duplicate_family_final_20260620\20260620_183058_reliability_gated_fusion_dfinal_baseline_seed43,0.9460375391032325,0.7060358326722884,0.015560792271548976,169,207,3,15,104,65,15,5
+baseline,44,results\duplicate_family_final_20260620\20260620_184300_reliability_gated_fusion_dfinal_baseline_seed44,0.9653932584269663,0.8132507087651342,0.022206014850166364,60,154,28,33,25,35,21,12
+pro,42,results\duplicate_family_final_20260620\20260620_192647_reliability_gated_fusion_dfinal_pro_seed42,0.9074868860276586,0.7138894409687769,0.0737620760101788,281,388,3,16,242,39,83,5
+pro,43,results\duplicate_family_final_20260620\20260620_193707_reliability_gated_fusion_dfinal_pro_seed43,0.9426485922836287,0.733567953825124,0.03992430056222909,143,220,65,3,100,43,3,6
+pro,44,results\duplicate_family_final_20260620\20260620_195636_reliability_gated_fusion_dfinal_pro_seed44,0.8943820224719101,0.7012399566430418,0.08165069375145305,56,470,354,34,26,30,19,7
