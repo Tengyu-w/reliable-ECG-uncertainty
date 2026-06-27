@@ -11,6 +11,7 @@ experiment dump.
 | 2 min | [Project README](../README.md) | Main contribution, result snapshot, and limitations. |
 | 5 min | [PhD application brief](phd_application_project_brief.md) | Short supervisor-facing project pitch. |
 | 10 min | [Experiment evidence summary](EXPERIMENT_EVIDENCE_SUMMARY.md) | The full research logic in one compact document. |
+| Reuse | [Transferable method framework](VT_VF_TRANSFERABLE_METHOD_FRAMEWORK_CN.md) | Method template for other manuscripts or projects. |
 | 15 min | [Evidence index](evidence_index.md) | Claim-by-claim pointers to public figures and tables. |
 | 30 min | [Research report](RESEARCH_REPORT.md) | Detailed stage-ordered report. |
 
@@ -19,6 +20,8 @@ experiment dump.
 - [APPLICATION_INDEX.md](APPLICATION_INDEX.md): advisor-facing entry point.
 - [EXPERIMENT_EVIDENCE_SUMMARY.md](EXPERIMENT_EVIDENCE_SUMMARY.md): compact
   story of what was tested, why, what worked, and what failed.
+- [VT_VF_TRANSFERABLE_METHOD_FRAMEWORK_CN.md](VT_VF_TRANSFERABLE_METHOD_FRAMEWORK_CN.md):
+  reusable method framework distilled from the VT/VF project.
 - [RESEARCH_REPORT.md](RESEARCH_REPORT.md): full research narrative.
 - [METHOD_OVERVIEW.md](METHOD_OVERVIEW.md): method diagram and reliability
   signal families.

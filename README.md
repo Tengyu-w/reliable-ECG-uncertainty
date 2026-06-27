@@ -151,6 +151,9 @@ For the full stage-ordered report, see
 For the compact experiment-and-evidence narrative, see
 [docs/EXPERIMENT_EVIDENCE_SUMMARY.md](docs/EXPERIMENT_EVIDENCE_SUMMARY.md).
 
+For a reusable method framework that can be adapted to other projects, see
+[docs/VT_VF_TRANSFERABLE_METHOD_FRAMEWORK_CN.md](docs/VT_VF_TRANSFERABLE_METHOD_FRAMEWORK_CN.md).
+
 For the public figure index, see
 [docs/FIGURE_ATLAS.md](docs/FIGURE_ATLAS.md).
 
