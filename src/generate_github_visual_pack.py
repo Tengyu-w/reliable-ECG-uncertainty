@@ -511,7 +511,7 @@ def update_public_indexes(new_entries: list[dict[str, str]]) -> None:
         ]
     )
     if "| V5d hierarchical router | `results_public/figures/12_v5d_hierarchical_router/`" not in text:
-        marker = "| V6 RISK distillation | `results_public/figures/11_v6_risk_distillation/` | The final deployable RISK framing and review-budget evidence. |"
+        marker = "| V6 RISK distillation | `results_public/figures/11_v6_risk_distillation/` | RISK as the reliability evidence layer and review-budget evidence. |"
         text = text.replace(marker, marker + "\n" + additions)
     if "Finish with `12_v5d_hierarchical_router/`" not in text:
         text = text.replace(

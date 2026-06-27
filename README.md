@@ -116,17 +116,14 @@ This is why the final contribution is best described as:
 For the full stage-ordered report, see
 [docs/RESEARCH_REPORT.md](docs/RESEARCH_REPORT.md).
 
+For the compact experiment-and-evidence narrative, see
+[docs/EXPERIMENT_EVIDENCE_SUMMARY.md](docs/EXPERIMENT_EVIDENCE_SUMMARY.md).
+
 For the public figure index, see
 [docs/FIGURE_ATLAS.md](docs/FIGURE_ATLAS.md).
 
-For the long experiment-by-experiment archive, see
-[docs/COMPLETE_EXPERIMENT_COMPENDIUM.md](docs/COMPLETE_EXPERIMENT_COMPENDIUM.md).
-
-For the research version history, see
-[docs/PROJECT_EVOLUTION.md](docs/PROJECT_EVOLUTION.md).
-
-For the Word-report coverage audit, see
-[docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md](docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md).
+For the documentation map, see
+[docs/README.md](docs/README.md).
 
 ## Backbone Results Snapshot
 
@@ -242,9 +239,10 @@ If you are reviewing this repository for PhD fit, start here:
 
 1. [Application index](docs/APPLICATION_INDEX.md)
 2. [PhD application project brief](docs/phd_application_project_brief.md)
-3. [Evidence index](docs/evidence_index.md)
-4. [Research report](docs/RESEARCH_REPORT.md)
-5. [Figure atlas](docs/FIGURE_ATLAS.md)
+3. [Experiment evidence summary](docs/EXPERIMENT_EVIDENCE_SUMMARY.md)
+4. [Evidence index](docs/evidence_index.md)
+5. [Research report](docs/RESEARCH_REPORT.md)
+6. [Figure atlas](docs/FIGURE_ATLAS.md)
 
 The intended application framing is trustworthy medical machine learning,
 uncertainty estimation, and review-routing reliability. It should not be
@@ -256,7 +254,7 @@ described as a clinical system.
 src/                      Core training, uncertainty, calibration, OOD,
                           boundary, and review-routing code
 docs/                     Research report, method overview, data statement,
-                          and experiment pipeline
+                          evidence summary, and experiment pipeline
 results_public/tables/    Curated aggregate summary tables only
 results_public/figures/   Public-safe figure atlas grouped by experiment stage
 data/README.md            Dataset access note; raw ECG data are not distributed

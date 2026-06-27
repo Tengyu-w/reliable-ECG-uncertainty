@@ -576,13 +576,14 @@ redistributing restricted biomedical material.
 
 | Evidence type | Location |
 | --- | --- |
+| Documentation guide | `docs/README.md` |
+| Compact experiment summary | `docs/EXPERIMENT_EVIDENCE_SUMMARY.md` |
 | Full stage-ordered report | `docs/RESEARCH_REPORT.md` |
+| Method overview | `docs/METHOD_OVERVIEW.md` |
 | Experiment pipeline | `docs/EXPERIMENT_PIPELINE.md` |
 | Figure atlas | `docs/FIGURE_ATLAS.md` and `results_public/figures/` |
 | Public tables | `results_public/tables/`, with duplicate-family tables used for final claims and older paired tables retained as historical evidence |
 | Code map | `src/README.md` |
-| Version history | `docs/PROJECT_EVOLUTION.md` |
-| Word-compendium coverage audit | `docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md` |
 
 The repository intentionally excludes raw ECG records, private review examples,
 doctor-review figures, model checkpoints, embeddings, logits, probabilities,
