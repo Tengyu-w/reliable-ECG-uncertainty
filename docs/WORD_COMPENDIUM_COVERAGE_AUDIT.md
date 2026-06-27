@@ -24,6 +24,21 @@ not as full raw artifacts, because they contain sample-level ECG evidence or
 private review material. This is a research-safety and data-governance choice,
 not an omission.
 
+## Version Interpretation
+
+The integrated Word report contains the full research evolution, including
+earlier V3/V4/V5 results. The public GitHub repository now labels those older
+results as historical evidence where appropriate. Final public claims should be
+based on the V6 duplicate-family summaries and validation-selected deployable
+RISK tables in `results_public/tables/`.
+
+In final GitHub wording:
+
+- PRO is a boundary-structure intervention and error-migration analysis.
+- Validation-selected deployable RISK is the main review-routing contribution.
+- Older paired PRO and supervisor summaries are retained to document the
+  research path, not to claim final superiority.
+
 ## Section-Level Mapping
 
 | Word report section | Public GitHub coverage | Status |
@@ -66,6 +81,7 @@ The public release includes:
 
 - aggregate model, split, uncertainty, geometry, and paired-comparison tables in
   `results_public/tables/`;
+- final duplicate-family aggregate tables in `results_public/tables/`;
 - curated summary figures in `results_public/figures/`;
 - 83 public-safe figures extracted from the integrated report and grouped by
   stage in `results_public/figures/`;

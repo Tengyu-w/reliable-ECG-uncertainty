@@ -13,6 +13,22 @@ available in `docs/WORD_COMPENDIUM_COVERAGE_AUDIT.md`. That audit explains
 which experimental stages are fully represented in the public repository and
 which sample-level materials are intentionally summarized rather than uploaded.
 
+## GitHub Interpretation Note
+
+This compendium preserves the experiment history. Some public figures and
+tables come from earlier V3/V4/V5 runs and should be read as historical
+evidence. The final GitHub interpretation uses the V6 duplicate-family
+evidence:
+
+- PRO is no longer presented as a stable accuracy-improving method. It is a
+  boundary-structure intervention that exposed error migration under the
+  stricter split.
+- RISK is the main current contribution because the validation-selected
+  deployable risk head directly supports fixed-budget expert-review routing.
+- Public tables whose names begin with `duplicate_family_` should be used for
+  final V6 claims. Older paired tables remain useful for understanding how the
+  project evolved.
+
 ## 1. Research Framing
 
 The project starts from a practical weakness of accuracy-only ECG
@@ -71,6 +87,13 @@ The split is evaluated at the level of source records, not only windows. Later
 audits also check duplicate-family and exact-window overlap risks. This matters
 because leakage would make the downstream uncertainty and review-routing results
 less meaningful.
+
+The final V6 protocol groups exact-duplicate-connected source records into
+duplicate families before splitting. The public-safe final summary is:
+
+```text
+results_public/tables/duplicate_family_baseline_pro_summary.csv
+```
 
 ## 4. Model Training And Backbone Comparison
 
@@ -303,11 +326,21 @@ The public paired classification table is:
 results_public/tables/paired_classification_comparisons.csv
 ```
 
-Main conclusion:
+Historical conclusion:
 
 Prototype separation shows promising improvements in the paired seed summaries,
 but the seed count is small. The correct interpretation is preliminary evidence,
 not final proof.
+
+Final duplicate-family conclusion:
+
+Under the stricter duplicate-family split, PRO is not a stable performance
+improvement. Across three seeds, the baseline/teacher averaged accuracy 0.9451
+and macro-F1 0.7603, while PRO averaged accuracy 0.9148 and macro-F1 0.7162.
+PRO still remains scientifically useful because it reveals how a boundary
+intervention can move errors between directions, including SR-related errors.
+The final report therefore treats PRO as boundary-structure and error-migration
+evidence rather than as the main deployable method.
 
 ## 11. RISK: Multi-Source Reliability Evidence
 
@@ -336,6 +369,20 @@ The public paired review-routing table is:
 ```text
 results_public/tables/paired_review_routing_comparisons.csv
 ```
+
+For final V6 claims, use the duplicate-family RISK tables:
+
+```text
+results_public/tables/duplicate_family_selected_risk_review_aggregate.csv
+results_public/tables/duplicate_family_risk_error_type_capture_mean_std.csv
+results_public/tables/duplicate_family_risk_record_cluster_ci.csv
+```
+
+The validation-selected deployable risk head captures 82.8% of VT/VF
+cross-errors at 10% review burden and 100.0% at 20% review burden in the final
+three-seed duplicate-family summary. This is the strongest current evidence for
+the GitHub version, but it remains internal validation rather than clinical
+validation.
 
 ## 12. Conformal And Prediction-Set Baselines
 
@@ -375,6 +422,8 @@ results_public/figures/README.md
 This includes projection galleries, uncertainty and calibration figures,
 regularity feature figures, corruption severity plots, risk-head results,
 prototype-separation evidence, and RISK aggregate evidence figures.
+It also includes V6 duplicate-family PRO error-migration and RISK distillation
+evidence.
 
 The excluded visual material is deliberate:
 
@@ -438,17 +487,18 @@ the review-ranking objective can get worse. This changed the research framing:
 review routing should be validation-aligned, not a naive average of all
 available uncertainty signals.
 
-### 15.4 Several paired comparisons remain statistically uncertain
+### 15.4 Historical paired comparisons remain statistically uncertain
 
-The current paired comparisons use three seeds. Some mean effects are promising,
-but several confidence intervals still cross zero. For example, prototype
-separation reduced mean VT/VF cross-errors, but the 95% confidence interval for
-that reduction still crosses zero in the public paired classification summary.
+The historical paired comparisons use three seeds. Some mean effects were
+promising, but several confidence intervals still crossed zero. For example,
+prototype separation reduced mean VT/VF cross-errors in an earlier paired
+classification summary, but the 95% confidence interval for that reduction
+crossed zero.
 
-Similarly, full-supervisor routing reduced mean VT/VF cross-error counts in the
-automatic route, but the seed-level differences include a case where the
-comparison worsened for one seed. This is exactly why the repository reports
-seed-level differences instead of only mean values.
+The stricter V6 duplicate-family rerun changed the interpretation further:
+PRO is no longer treated as a stable improvement and is instead used to discuss
+error migration. This is exactly why the repository reports seed-level
+differences and version history instead of only mean values.
 
 ### 15.5 Calibration and temperature scaling were not uniformly beneficial
 
@@ -471,7 +521,7 @@ tables instead.
 The current evidence remains limited:
 
 - the dataset is restricted and not externally validated here;
-- paired intervention summaries use three seeds;
+- final duplicate-family summaries use three seeds;
 - synthetic corruptions do not replace external OOD datasets;
 - window-level classification is not patient-level diagnosis;
 - the repository is not a clinical system and does not make medical-device

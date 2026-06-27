@@ -22,6 +22,13 @@ def _latest(results_dir: Path) -> Path:
     return Path(path.read_text(encoding="utf-8").strip())
 
 
+def _find_existing_run(results_dir: Path, suffix: str) -> Path | None:
+    matches = [path for path in results_dir.glob(f"*_{suffix}") if path.is_dir()]
+    if not matches:
+        return None
+    return max(matches, key=lambda path: path.stat().st_mtime)
+
+
 def _train_cmd(
     py: str,
     mat: Path,
@@ -33,6 +40,7 @@ def _train_cmd(
     out: Path,
     suffix: str,
     max_windows_per_record: int | None,
+    split_grouping: str,
     extra: dict[str, str],
 ) -> list[str]:
     cmd = [
@@ -55,6 +63,8 @@ def _train_cmd(
         str(out),
         "--run-suffix",
         suffix,
+        "--split-grouping",
+        split_grouping,
     ]
     if max_windows_per_record is not None:
         cmd.extend(["--max-windows-per-record", str(max_windows_per_record)])
@@ -114,7 +124,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Run the narrowed core intervention pipeline: regularity feature injection, "
-            "risk-aligned reliability distillation, and VT/VF prototype separation."
+            "risk-aligned reliability distillation, VT/VF prototype separation, "
+            "and boundary-aware contrastive representation learning."
         )
     )
     parser.add_argument("--mat", type=Path, default=Path("RHYTHMS.mat"))
@@ -130,8 +141,19 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--max-windows-per-record", type=int, default=None)
+    parser.add_argument(
+        "--split-grouping",
+        choices=["record", "duplicate_family"],
+        default="duplicate_family",
+        help="Use the stricter duplicate-family split for final reliability claims.",
+    )
     parser.add_argument("--out", type=Path, default=Path("results/core_interventions"))
     parser.add_argument("--run-analysis", action="store_true")
+    parser.add_argument(
+        "--reuse-existing",
+        action="store_true",
+        help="Reuse completed stage directories with matching suffixes instead of retraining them.",
+    )
     parser.add_argument("--skip-corruption", action="store_true")
     parser.add_argument("--skip-boundary", action="store_true")
     parser.add_argument("--skip-stability", action="store_true")
@@ -146,24 +168,29 @@ def main() -> None:
 
     for seed in args.seeds:
         teacher_suffix = f"core_regularity_injection_seed{seed}"
-        _run(
-            _train_cmd(
-                py,
-                args.mat,
-                args.model,
-                seed,
-                args.epochs,
-                args.batch_size,
-                args.lr,
-                args.out,
-                teacher_suffix,
-                args.max_windows_per_record,
-                extra={},
-            ),
-            cwd=root,
-            dry_run=args.dry_run,
-        )
-        teacher_run = args.out / f"DRY_RUN_{teacher_suffix}" if args.dry_run else _latest(args.out)
+        teacher_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(args.out, teacher_suffix)
+        if teacher_run is None:
+            _run(
+                _train_cmd(
+                    py,
+                    args.mat,
+                    args.model,
+                    seed,
+                    args.epochs,
+                    args.batch_size,
+                    args.lr,
+                    args.out,
+                    teacher_suffix,
+                    args.max_windows_per_record,
+                    args.split_grouping,
+                    extra={},
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            teacher_run = args.out / f"DRY_RUN_{teacher_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {teacher_run}", flush=True)
         if args.run_analysis:
             _run(
                 _analysis_cmd(
@@ -207,29 +234,62 @@ def main() -> None:
         )
         _write_manifest(manifest, rows)
 
-        risk_head_suffix = f"core_risk_distillation_seed{seed}"
+        risk_pro_plus_targets = teacher_run / "risk_pro_plus_targets.npz"
         _run(
             [
                 py,
                 "-m",
-                "src.train_embedding_risk_head",
+                "src.generate_risk_targets",
                 "--teacher-run-dir",
                 str(teacher_run),
-                "--risk-targets",
-                str(risk_targets),
-                "--epochs",
-                str(args.risk_head_epochs),
                 "--out",
-                str(args.out),
-                "--run-suffix",
-                risk_head_suffix,
-                "--seed",
-                str(seed),
+                str(risk_pro_plus_targets),
+                "--entropy-weight",
+                "0.25",
+                "--msp-weight",
+                "0.10",
+                "--local-instability-weight",
+                "0.20",
+                "--vtvf-mixing-weight",
+                "0.20",
+                "--knn-weight",
+                "0.15",
+                "--prototype-weight",
+                "0.05",
+                "--boundary-weight",
+                "0.05",
             ],
             cwd=root,
             dry_run=args.dry_run,
         )
-        risk_head_run = args.out / f"DRY_RUN_{risk_head_suffix}" if args.dry_run else _latest(args.out)
+
+        risk_head_suffix = f"core_risk_distillation_seed{seed}"
+        risk_head_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(args.out, risk_head_suffix)
+        if risk_head_run is None:
+            _run(
+                [
+                    py,
+                    "-m",
+                    "src.train_embedding_risk_head",
+                    "--teacher-run-dir",
+                    str(teacher_run),
+                    "--risk-targets",
+                    str(risk_targets),
+                    "--epochs",
+                    str(args.risk_head_epochs),
+                    "--out",
+                    str(args.out),
+                    "--run-suffix",
+                    risk_head_suffix,
+                    "--seed",
+                    str(seed),
+                ],
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            risk_head_run = args.out / f"DRY_RUN_{risk_head_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {risk_head_run}", flush=True)
         rows.append(
             {
                 "stage": "risk_aligned_reliability_distillation",
@@ -245,28 +305,33 @@ def main() -> None:
         _write_manifest(manifest, rows)
 
         prototype_suffix = f"core_prototype_separation_seed{seed}"
-        _run(
-            _train_cmd(
-                py,
-                args.mat,
-                args.model,
-                seed,
-                args.epochs,
-                args.batch_size,
-                args.lr,
-                args.out,
-                prototype_suffix,
-                args.max_windows_per_record,
-                extra={
-                    "prototype_center_weight": "0.02",
-                    "prototype_margin_weight": "0.05",
-                    "prototype_vtvf_margin": "1.0",
-                },
-            ),
-            cwd=root,
-            dry_run=args.dry_run,
-        )
-        prototype_run = args.out / f"DRY_RUN_{prototype_suffix}" if args.dry_run else _latest(args.out)
+        prototype_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(args.out, prototype_suffix)
+        if prototype_run is None:
+            _run(
+                _train_cmd(
+                    py,
+                    args.mat,
+                    args.model,
+                    seed,
+                    args.epochs,
+                    args.batch_size,
+                    args.lr,
+                    args.out,
+                    prototype_suffix,
+                    args.max_windows_per_record,
+                    args.split_grouping,
+                    extra={
+                        "prototype_center_weight": "0.02",
+                        "prototype_margin_weight": "0.05",
+                        "prototype_vtvf_margin": "1.0",
+                    },
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            prototype_run = args.out / f"DRY_RUN_{prototype_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {prototype_run}", flush=True)
         if args.run_analysis:
             _run(
                 _analysis_cmd(
@@ -295,6 +360,216 @@ def main() -> None:
         )
         _write_manifest(manifest, rows)
 
+        contrastive_suffix = f"core_boundary_contrastive_seed{seed}"
+        contrastive_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(args.out, contrastive_suffix)
+        if contrastive_run is None:
+            _run(
+                _train_cmd(
+                    py,
+                    args.mat,
+                    args.model,
+                    seed,
+                    args.epochs,
+                    args.batch_size,
+                    args.lr,
+                    args.out,
+                    contrastive_suffix,
+                    args.max_windows_per_record,
+                    args.split_grouping,
+                    extra={
+                        "contrastive_weight": "0.05",
+                        "contrastive_temperature": "0.1",
+                        "contrastive_boundary_anchor_weight": "2.0",
+                        "contrastive_vtvf_negative_weight": "2.0",
+                    },
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            contrastive_run = args.out / f"DRY_RUN_{contrastive_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {contrastive_run}", flush=True)
+        if args.run_analysis:
+            _run(
+                _analysis_cmd(
+                    py,
+                    args.mat,
+                    contrastive_run,
+                    args.model,
+                    args.skip_corruption,
+                    args.skip_boundary,
+                    args.skip_stability,
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+        rows.append(
+            {
+                "stage": "boundary_contrastive",
+                "seed": str(seed),
+                "model": args.model,
+                "run_dir": str(contrastive_run),
+                "teacher_run_dir": str(teacher_run),
+                "risk_targets": "",
+                "epochs": str(args.epochs),
+                "notes": "Training-time intervention for local VT/VF embedding neighborhood separation.",
+            }
+        )
+        _write_manifest(manifest, rows)
+
+        risk_pro_plus_suffix = f"core_risk_pro_plus_seed{seed}"
+        risk_pro_plus_extra = {
+            "risk_targets": str(risk_pro_plus_targets),
+            "boundary_ce_weight": "0.75",
+            "risk_entropy_weight": "0.10",
+            "stability_consistency_weight": "0.10",
+            "embedding_consistency_weight": "0.02",
+            "prototype_center_weight": "0.02",
+            "prototype_margin_weight": "0.05",
+            "prototype_vtvf_margin": "1.0",
+            "contrastive_weight": "0.03",
+            "contrastive_temperature": "0.1",
+            "contrastive_boundary_anchor_weight": "2.0",
+            "contrastive_vtvf_negative_weight": "2.0",
+            "regularity_aux_weight": "0.03",
+        }
+        if args.model == "reliability_gated_fusion":
+            risk_pro_plus_extra.update(
+                {
+                    "risk_boundary_weight": "0.30",
+                    "risk_gate_weight": "0.10",
+                }
+            )
+        risk_pro_plus_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(args.out, risk_pro_plus_suffix)
+        if risk_pro_plus_run is None:
+            _run(
+                _train_cmd(
+                    py,
+                    args.mat,
+                    args.model,
+                    seed,
+                    args.epochs,
+                    args.batch_size,
+                    args.lr,
+                    args.out,
+                    risk_pro_plus_suffix,
+                    args.max_windows_per_record,
+                    args.split_grouping,
+                    extra=risk_pro_plus_extra,
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            risk_pro_plus_run = args.out / f"DRY_RUN_{risk_pro_plus_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {risk_pro_plus_run}", flush=True)
+        if args.run_analysis:
+            _run(
+                _analysis_cmd(
+                    py,
+                    args.mat,
+                    risk_pro_plus_run,
+                    args.model,
+                    args.skip_corruption,
+                    args.skip_boundary,
+                    args.skip_stability,
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+        rows.append(
+            {
+                "stage": "risk_pro_plus",
+                "seed": str(seed),
+                "model": args.model,
+                "run_dir": str(risk_pro_plus_run),
+                "teacher_run_dir": str(teacher_run),
+                "risk_targets": str(risk_pro_plus_targets),
+                "epochs": str(args.epochs),
+                "notes": "Combines risk-weighted CE, risk entropy alignment, PRO, contrastive, consistency, and regularity auxiliary losses.",
+            }
+        )
+        _write_manifest(manifest, rows)
+
+        risk_pro_readable_suffix = f"core_risk_pro_readable_seed{seed}"
+        risk_pro_readable_extra = {
+            "risk_targets": str(risk_pro_plus_targets),
+            "boundary_ce_weight": "0.55",
+            "risk_entropy_weight": "0.15",
+            "anti_confident_risk_weight": "0.08",
+            "selective_stability_consistency_weight": "0.12",
+            "selective_embedding_consistency_weight": "0.02",
+            "prototype_center_weight": "0.01",
+            "prototype_margin_weight": "0.03",
+            "prototype_vtvf_margin": "1.0",
+            "contrastive_weight": "0.02",
+            "contrastive_temperature": "0.1",
+            "contrastive_boundary_anchor_weight": "2.5",
+            "contrastive_vtvf_negative_weight": "2.5",
+            "regularity_aux_weight": "0.02",
+            "vtvf_readability_weight": "0.06",
+        }
+        if args.model == "reliability_gated_fusion":
+            risk_pro_readable_extra.update(
+                {
+                    "risk_boundary_weight": "0.25",
+                    "risk_gate_weight": "0.08",
+                }
+            )
+        risk_pro_readable_run = None if args.dry_run or not args.reuse_existing else _find_existing_run(
+            args.out,
+            risk_pro_readable_suffix,
+        )
+        if risk_pro_readable_run is None:
+            _run(
+                _train_cmd(
+                    py,
+                    args.mat,
+                    args.model,
+                    seed,
+                    args.epochs,
+                    args.batch_size,
+                    args.lr,
+                    args.out,
+                    risk_pro_readable_suffix,
+                    args.max_windows_per_record,
+                    args.split_grouping,
+                    extra=risk_pro_readable_extra,
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+            risk_pro_readable_run = args.out / f"DRY_RUN_{risk_pro_readable_suffix}" if args.dry_run else _latest(args.out)
+        else:
+            print(f"\n$ reuse {risk_pro_readable_run}", flush=True)
+        if args.run_analysis:
+            _run(
+                _analysis_cmd(
+                    py,
+                    args.mat,
+                    risk_pro_readable_run,
+                    args.model,
+                    args.skip_corruption,
+                    args.skip_boundary,
+                    args.skip_stability,
+                ),
+                cwd=root,
+                dry_run=args.dry_run,
+            )
+        rows.append(
+            {
+                "stage": "risk_pro_readable",
+                "seed": str(seed),
+                "model": args.model,
+                "run_dir": str(risk_pro_readable_run),
+                "teacher_run_dir": str(teacher_run),
+                "risk_targets": str(risk_pro_plus_targets),
+                "epochs": str(args.epochs),
+                "notes": "Risk-Pro with explicit VT/VF readability, selective low-risk stability, and anti-confident high-risk constraints.",
+            }
+        )
+        _write_manifest(manifest, rows)
+
     config = {
         "mat": str(args.mat),
         "model": args.model,
@@ -304,6 +579,7 @@ def main() -> None:
         "batch_size": args.batch_size,
         "lr": args.lr,
         "max_windows_per_record": args.max_windows_per_record,
+        "split_grouping": args.split_grouping,
         "run_analysis": args.run_analysis,
         "skip_corruption": args.skip_corruption,
         "skip_boundary": args.skip_boundary,

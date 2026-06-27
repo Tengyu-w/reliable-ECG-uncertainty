@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 from pathlib import Path
@@ -134,6 +134,7 @@ def main() -> None:
             "resnet1d",
             "inception_time",
             "bigru",
+            "cnn_lstm",
             "regularity_fusion",
             "reliability_gated_fusion",
         ],

@@ -1,6 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 from torch.utils.data import DataLoader, TensorDataset
 
-from .data import CLASS_NAMES, extract_regularity_features_batch, load_rhythm_windows, make_splits
+from .data import CLASS_NAMES, build_duplicate_family_groups, extract_regularity_features_batch, load_rhythm_windows, make_splits
 from .evaluate_corruption_severity import _corrupt
 from .metrics import softmax
 from .models import build_model
@@ -30,6 +31,19 @@ def _loader(x: np.ndarray, batch_size: int, features: np.ndarray | None = None) 
     else:
         ds = TensorDataset(torch.from_numpy(x), torch.from_numpy(features), torch.from_numpy(y))
     return DataLoader(ds, batch_size=batch_size)
+
+
+def _split_groups_for_run(dataset, run_dir: Path) -> np.ndarray:
+    summary_path = run_dir / "split_summary.json"
+    split_grouping = "record"
+    if summary_path.exists():
+        try:
+            split_grouping = json.loads(summary_path.read_text(encoding="utf-8")).get("split_grouping", "record")
+        except json.JSONDecodeError:
+            split_grouping = "record"
+    if split_grouping == "duplicate_family":
+        return build_duplicate_family_groups(dataset.x, dataset.record_ids)
+    return dataset.record_ids
 
 
 def _robust_scale(x: np.ndarray) -> np.ndarray:
@@ -180,6 +194,7 @@ def main() -> None:
             "resnet1d",
             "inception_time",
             "bigru",
+            "cnn_lstm",
             "regularity_fusion",
             "reliability_gated_fusion",
         ],
@@ -193,7 +208,8 @@ def main() -> None:
 
     run_dir = _resolve_run_dir(args.run_dir)
     dataset = load_rhythm_windows(args.mat)
-    splits = make_splits(dataset.x, dataset.y, groups=dataset.record_ids, seed=args.seed)
+    split_groups = _split_groups_for_run(dataset, run_dir)
+    splits = make_splits(dataset.x, dataset.y, groups=split_groups, seed=args.seed)
     x_test = splits.x_test.astype(np.float32)
 
     feature_scaler = None
@@ -219,6 +235,11 @@ def main() -> None:
     train_emb = train["embeddings"]
     train_y = train["y"].astype(int)
     y = base["y"].astype(int)
+    if len(x_test) != len(y):
+        raise ValueError(
+            "Stability split length does not match run embeddings: "
+            f"x_test={len(x_test)}, embeddings_test={len(y)}. Check split_summary.json and seed."
+        )
     probs = softmax(base_logits)
     pred = probs.argmax(axis=1)
     base_conf = probs[np.arange(len(probs)), pred]

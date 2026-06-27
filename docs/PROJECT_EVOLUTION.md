@@ -146,12 +146,32 @@ Main work:
 - Added public-safe aggregate figures and tables.
 - Added a complete experiment compendium.
 - Explicitly documented negative results and limitations.
+- Marked earlier V3/V4/V5 results as historical evidence where the final V6
+  duplicate-family interpretation supersedes them.
 
 Why it matters:
 
 This release is not another experimental method iteration. It is a communication
 and research-portfolio iteration: it makes the work readable to potential
 supervisors while preserving data boundaries.
+
+## How To Read Versioned Results
+
+The repository intentionally keeps earlier figures and tables because they show
+how the research question matured. They should not all be read as final claims.
+
+Use this convention:
+
+- V3/V4/V5 PRO, supervisor, and mitigation tables are historical evidence.
+  They explain why boundary intervention and review routing were explored.
+- V6 duplicate-family tables are the final public evidence for the current
+  GitHub version.
+- The final claim is not that PRO universally improves classification. The
+  final claim is that PRO exposes boundary-structure and error-migration
+  behaviour, while validation-selected RISK provides the strongest deployable
+  review-routing evidence.
+- All results remain internal research evidence and require external validation
+  before any clinical interpretation.
 
 ## Summary Count
 
@@ -167,4 +187,3 @@ The project has six substantive research iterations:
 
 The current GitHub version is best described as a seventh communication stage,
 not a seventh scientific method iteration.
-

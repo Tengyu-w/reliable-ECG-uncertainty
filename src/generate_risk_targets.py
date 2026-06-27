@@ -9,7 +9,26 @@ import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 from .metrics import softmax
-from .uncertainty import entropy, knn_distance
+from .uncertainty import entropy, knn_distance, msp, prototype_distance
+
+
+RISK_COMPONENTS = [
+    "entropy",
+    "msp",
+    "knn",
+    "prototype",
+    "local_instability",
+    "vtvf_mixing",
+    "softmax_vtvf_ambiguity",
+]
+
+BOUNDED_COMPONENTS = {
+    "entropy",
+    "msp",
+    "local_instability",
+    "vtvf_mixing",
+    "softmax_vtvf_ambiguity",
+}
 
 
 def _resolve_run_dir(run_dir: Path) -> Path:
@@ -31,12 +50,7 @@ def _scale_with_train(x: np.ndarray, train_x: np.ndarray) -> np.ndarray:
 
 
 def _scale_component(name: str, x: np.ndarray, train_x: np.ndarray) -> np.ndarray:
-    if name in {
-        "entropy",
-        "local_instability",
-        "vtvf_mixing",
-        "softmax_vtvf_ambiguity",
-    }:
+    if name in BOUNDED_COMPONENTS:
         return np.clip(x, 0.0, 1.0).astype(np.float32)
     return _scale_with_train(x, train_x)
 
@@ -93,7 +107,9 @@ def _components(
     )
     return {
         "entropy": (entropy(probs) / np.log(probs.shape[1])).astype(np.float32),
+        "msp": msp(probs).astype(np.float32),
         "knn": knn_distance(train_emb, emb, k=k + 1 if is_train else k).astype(np.float32),
+        "prototype": prototype_distance(train_emb, train_y, emb).astype(np.float32),
         "local_instability": local_instability,
         "vtvf_mixing": vtvf_mixing,
         "softmax_vtvf_ambiguity": _softmax_boundary(probs),
@@ -109,13 +125,7 @@ def _risk_from_components(
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     scaled = {
         name: _scale_component(name, comp[name], train_comp[name])
-        for name in [
-            "entropy",
-            "knn",
-            "local_instability",
-            "vtvf_mixing",
-            "softmax_vtvf_ambiguity",
-        ]
+        for name in RISK_COMPONENTS
     }
     risk = np.zeros_like(scaled["entropy"], dtype=np.float32)
     for name, weight in weights.items():
@@ -136,9 +146,11 @@ def main() -> None:
     )
     parser.add_argument("--k", type=int, default=15)
     parser.add_argument("--entropy-weight", type=float, default=0.30)
+    parser.add_argument("--msp-weight", type=float, default=0.0)
     parser.add_argument("--local-instability-weight", type=float, default=0.25)
     parser.add_argument("--vtvf-mixing-weight", type=float, default=0.20)
     parser.add_argument("--knn-weight", type=float, default=0.15)
+    parser.add_argument("--prototype-weight", type=float, default=0.0)
     parser.add_argument("--boundary-weight", type=float, default=0.10)
     args = parser.parse_args()
 
@@ -149,12 +161,16 @@ def main() -> None:
     components_out_dir.mkdir(parents=True, exist_ok=True)
     weights = {
         "entropy": args.entropy_weight,
+        "msp": args.msp_weight,
         "local_instability": args.local_instability_weight,
         "vtvf_mixing": args.vtvf_mixing_weight,
         "knn": args.knn_weight,
+        "prototype": args.prototype_weight,
         "softmax_vtvf_ambiguity": args.boundary_weight,
     }
     weight_sum = sum(weights.values())
+    if weight_sum <= 0:
+        raise ValueError("At least one risk component weight must be positive.")
     weights = {name: value / weight_sum for name, value in weights.items()}
 
     train_logits, train_emb, train_y = _load(run_dir, "train")

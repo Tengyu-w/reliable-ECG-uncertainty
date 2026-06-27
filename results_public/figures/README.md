@@ -16,6 +16,9 @@ Public-safe figures are grouped by experimental stage. Each stage folder contain
 | PRO Boundary-Structure Mitigation | `09_pro_boundary_mitigation/` | 2 | V5 reinterpretation of PRO as boundary-structure mitigation rather than a generic prototype loss. |
 | V6 PRO Error Migration | `10_v6_pro_error_migration/` | 2 | V6 duplicate-family evidence showing why PRO should be interpreted cautiously as a boundary intervention. |
 | V6 RISK Distillation | `11_v6_risk_distillation/` | 2 | V6 evidence for deployable RISK distillation and review-routing validation. |
+| V5d Hierarchical Router | `12_v5d_hierarchical_router/` | 4 | Final mechanism-separated hierarchical routing policy and budget behavior. |
+| Frozen Self-Supervised Encoder | `13_frozen_ssl_encoder/` | 3 | Frozen encoder foundation-readiness baseline and review-routing curves. |
+| Explanation Reliability | `14_explanation_reliability/` | 3 | Mechanism-alignment checks for explanation evidence families. |
 
 ## Excluded Material
 

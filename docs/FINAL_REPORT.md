@@ -22,6 +22,24 @@ The main research question is:
 The work is therefore framed as a reliability and review-routing prototype,
 not as a clinical diagnostic system.
 
+## Current GitHub Position
+
+This report should be read as the public GitHub summary, not as a dump of every
+local experiment. The final interpretation uses the V6 duplicate-family
+evidence. Earlier paired PRO and supervisor tables are retained in the
+repository as historical evidence, but final claims should use the
+`duplicate_family_` public tables.
+
+The current position is:
+
+- PRO is a useful boundary-structure intervention, but under the stricter
+  duplicate-family split it can shift errors and is not the final deployable
+  solution.
+- Validation-selected deployable RISK is the main contribution because it
+  directly ranks cases for expert review under fixed review budgets.
+- The repository shows internal reliability evidence only, not clinical
+  validation.
+
 ## 2. Data Protocol
 
 The code expects a local MATLAB file named `RHYTHMS.mat` containing ECG records
@@ -149,11 +167,23 @@ results_public/tables/paired_classification_comparisons.csv
 results_public/tables/paired_review_routing_comparisons.csv
 ```
 
-One representative finding is that prototype-separation training improved mean
-accuracy and macro-F1 across the three paired seeds, while reducing the mean
-error rate in the automatically accepted subset. However, confidence intervals
-are still wide for some comparisons. These results should be interpreted as
-preliminary research evidence.
+These tables are historical paired evidence from earlier experiment versions.
+They explain why PRO and supervisor-style routing were investigated, but they
+are not the final GitHub conclusion.
+
+The final duplicate-family summaries are:
+
+```text
+results_public/tables/duplicate_family_baseline_pro_summary.csv
+results_public/tables/duplicate_family_selected_risk_review_aggregate.csv
+results_public/tables/duplicate_family_pro_error_migration_mean_std.csv
+results_public/tables/duplicate_family_risk_error_type_capture_mean_std.csv
+```
+
+In the final duplicate-family rerun, PRO is interpreted as error-migration
+evidence rather than stable improvement. Validation-selected RISK is the main
+review-routing result: it captured 82.8% of VT/VF cross-errors at 10% review
+burden and 100.0% at 20% review burden across the three seeds.
 
 ## 8. What This Repository Demonstrates
 
@@ -185,9 +215,11 @@ research evidence.
 - Multi-source risk evidence was not automatically better. Hand-weighted
   combinations can dilute the VT/VF boundary signal if the weights are not
   aligned with the review objective.
-- Several paired comparisons remain statistically uncertain because they use
-  three seeds. Some confidence intervals cross zero, so the evidence should be
-  treated as preliminary.
+- Earlier paired comparisons were statistically uncertain because they used
+  three seeds and some confidence intervals crossed zero.
+- Under the stricter duplicate-family rerun, PRO can shift errors rather than
+  consistently improve the classifier, so it is presented as boundary
+  intervention evidence rather than the final method.
 - Calibration is useful but not sufficient. Temperature scaling and ECE should
   be interpreted alongside review capture, OOD response, and boundary errors.
 
@@ -215,10 +247,11 @@ They define the next validation steps.
 The most important next steps are:
 
 1. Validate on an external ECG dataset with a clearly documented licence.
-2. Extend the paired seed count and report record-balanced uncertainty.
-3. Audit duplicate-family splits and retrain the core baselines under that
-   protocol.
+2. Extend the paired seed count beyond the current three-seed duplicate-family
+   evidence.
+3. Run external validation on a dataset with documented access and licence
+   conditions.
 4. Compare fixed review budgets against clinically meaningful review workflows.
-5. Convert the strongest reliability signals into a small, deployable risk head
-   while keeping the evaluation separated from training and validation choices.
+5. Stress-test the selected duplicate-family RISK heads under corruption and
+   shift, while keeping tuning restricted to validation data.
 
