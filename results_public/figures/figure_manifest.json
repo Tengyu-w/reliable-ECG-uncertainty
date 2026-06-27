@@ -791,7 +791,7 @@
   },
   {
     "file": "results_public/figures/10_v6_pro_error_migration/individual_figures/fig_081_7_PRO.png",
-    "section": "7. PRO：边界结构干预及其新解释",
+    "section": "7. PRO\uff1a\u8fb9\u754c\u7ed3\u6784\u5e72\u9884\u53ca\u5176\u65b0\u89e3\u91ca",
     "subsection": "",
     "source_image_index": 381,
     "location": "body_child_732_paragraph",
@@ -801,7 +801,7 @@
   },
   {
     "file": "results_public/figures/10_v6_pro_error_migration/individual_figures/fig_082_7_PRO.png",
-    "section": "7. PRO：边界结构干预及其新解释",
+    "section": "7. PRO\uff1a\u8fb9\u754c\u7ed3\u6784\u5e72\u9884\u53ca\u5176\u65b0\u89e3\u91ca",
     "subsection": "",
     "source_image_index": 382,
     "location": "body_child_734_paragraph",
@@ -811,7 +811,7 @@
   },
   {
     "file": "results_public/figures/11_v6_risk_distillation/individual_figures/fig_083_8_RISK.png",
-    "section": "8. RISK：多源可靠性证据蒸馏",
+    "section": "8. RISK\uff1a\u591a\u6e90\u53ef\u9760\u6027\u8bc1\u636e\u84b8\u998f",
     "subsection": "",
     "source_image_index": 383,
     "location": "body_child_752_paragraph",
@@ -821,12 +821,112 @@
   },
   {
     "file": "results_public/figures/11_v6_risk_distillation/individual_figures/fig_084_8_RISK.png",
-    "section": "8. RISK：多源可靠性证据蒸馏",
+    "section": "8. RISK\uff1a\u591a\u6e90\u53ef\u9760\u6027\u8bc1\u636e\u84b8\u998f",
     "subsection": "",
     "source_image_index": 384,
     "location": "body_child_754_paragraph",
     "reason": "included from non-sensitive method/evidence sections",
     "group": "11_v6_risk_distillation",
     "group_title": "V6 RISK Distillation"
+  },
+  {
+    "file": "results_public/figures/12_v5d_hierarchical_router/individual_figures/fig_085_v5d_capture_vs_budget.png",
+    "section": "V5d Hierarchical Router",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 1,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "12_v5d_hierarchical_router",
+    "group_title": "V5d Hierarchical Router"
+  },
+  {
+    "file": "results_public/figures/12_v5d_hierarchical_router/individual_figures/fig_086_v5d_unresolved_vtvf_rate.png",
+    "section": "V5d Hierarchical Router",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 2,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "12_v5d_hierarchical_router",
+    "group_title": "V5d Hierarchical Router"
+  },
+  {
+    "file": "results_public/figures/12_v5d_hierarchical_router/individual_figures/fig_087_v5d_stage_allocation.png",
+    "section": "V5d Hierarchical Router",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 3,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "12_v5d_hierarchical_router",
+    "group_title": "V5d Hierarchical Router"
+  },
+  {
+    "file": "results_public/figures/12_v5d_hierarchical_router/individual_figures/fig_088_v5d_method_diagram.png",
+    "section": "V5d Hierarchical Router",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 4,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "12_v5d_hierarchical_router",
+    "group_title": "V5d Hierarchical Router"
+  },
+  {
+    "file": "results_public/figures/13_frozen_ssl_encoder/individual_figures/fig_089_ssl_metrics_summary.png",
+    "section": "Frozen Self-Supervised Encoder",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 1,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "13_frozen_ssl_encoder",
+    "group_title": "Frozen Self-Supervised Encoder"
+  },
+  {
+    "file": "results_public/figures/13_frozen_ssl_encoder/individual_figures/fig_090_ssl_review_capture_vs_budget.png",
+    "section": "Frozen Self-Supervised Encoder",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 2,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "13_frozen_ssl_encoder",
+    "group_title": "Frozen Self-Supervised Encoder"
+  },
+  {
+    "file": "results_public/figures/13_frozen_ssl_encoder/individual_figures/fig_091_ssl_vs_v5d_20pct.png",
+    "section": "Frozen Self-Supervised Encoder",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 3,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "13_frozen_ssl_encoder",
+    "group_title": "Frozen Self-Supervised Encoder"
+  },
+  {
+    "file": "results_public/figures/14_explanation_reliability/individual_figures/fig_092_explanation_alignment_heatmap.png",
+    "section": "Explanation Reliability",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 1,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "14_explanation_reliability",
+    "group_title": "Explanation Reliability"
+  },
+  {
+    "file": "results_public/figures/14_explanation_reliability/individual_figures/fig_093_preferred_explanation_capture.png",
+    "section": "Explanation Reliability",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 2,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "14_explanation_reliability",
+    "group_title": "Explanation Reliability"
+  },
+  {
+    "file": "results_public/figures/14_explanation_reliability/individual_figures/fig_094_v5d_route_alignment_precision.png",
+    "section": "Explanation Reliability",
+    "subsection": "GitHub visual pack",
+    "source_image_index": 3,
+    "location": "generated_from_aggregate_csv",
+    "reason": "public-safe aggregate figure generated for GitHub release",
+    "group": "14_explanation_reliability",
+    "group_title": "Explanation Reliability"
   }
 ]

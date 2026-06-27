@@ -8,6 +8,11 @@ All figures in this atlas are public-safe aggregate or method-evidence figures.
 Raw ECG waveform galleries, private review examples, doctor-review examples,
 and sample-level risk evidence cards are intentionally excluded.
 
+Some figure groups preserve historical V3/V4/V5 evidence. For final GitHub
+claims, read those historical groups together with `10_v6_pro_error_migration`
+and `11_v6_risk_distillation`, which contain the stricter duplicate-family
+interpretation.
+
 ## Figure Groups
 
 | Stage | Folder | What The Reader Should Look For |
@@ -23,7 +28,10 @@ and sample-level risk evidence cards are intentionally excluded.
 | RISK corruption robustness | `results_public/figures/08_risk_corruption_robustness/` | Whether RISK scores increase under signal degradation and whether review capture persists. |
 | PRO boundary mitigation | `results_public/figures/09_pro_boundary_mitigation/` | The V5 interpretation of PRO as boundary-structure mitigation rather than a generic loss term. |
 | V6 PRO error migration | `results_public/figures/10_v6_pro_error_migration/` | Why the final report treats PRO cautiously under stricter duplicate-family evidence. |
-| V6 RISK distillation | `results_public/figures/11_v6_risk_distillation/` | The final deployable RISK framing and review-budget evidence. |
+| V6 RISK distillation | `results_public/figures/11_v6_risk_distillation/` | RISK as the reliability evidence layer and review-budget evidence. |
+| V5d hierarchical router | `results_public/figures/12_v5d_hierarchical_router/` | Final decision-policy evidence: v5d budget curves, residual VT/VF rate, stage allocation, and method diagram. |
+| Frozen self-supervised encoder | `results_public/figures/13_frozen_ssl_encoder/` | Lightweight frozen encoder baseline showing classification limits but strong risk-ranking behavior. |
+| Explanation reliability | `results_public/figures/14_explanation_reliability/` | Quantitative alignment between explanation evidence families and intended error mechanisms. |
 
 Each folder contains:
 
@@ -42,8 +50,10 @@ Each folder contains:
    `10_v6_pro_error_migration/` together. These show why PRO is useful but not
    overclaimed.
 5. Finish with `05_risk_supervisor_ablation/`, `08_risk_corruption_robustness/`,
-   and `11_v6_risk_distillation/`, which support the final RISK and
-   review-routing story.
+   and `11_v6_risk_distillation/`, which support the RISK evidence layer.
+6. Finish with `12_v5d_hierarchical_router/`, then check
+   `13_frozen_ssl_encoder/` and `14_explanation_reliability/` for the new
+   final-method, frozen-encoder, and explanation-reliability evidence.
 
 ## Interpretation Notes
 

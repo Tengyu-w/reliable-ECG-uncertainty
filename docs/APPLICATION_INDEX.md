@@ -2,86 +2,83 @@
 
 This page is the supervisor-facing entry point for the repository. It frames
 the project for PhD applications in trustworthy medical machine learning,
-uncertainty estimation, calibration, selective prediction, and safety-adjacent
-AI review routing.
+uncertainty estimation, calibration, selective prediction, and human-in-the-loop
+review routing.
 
 ## Thirty-Second Summary
 
 This project studies whether an ECG classifier can recognize when its own
-SR/VT/VF prediction is unreliable. The strongest current claim is not ordinary
-classification accuracy; it is review-routing reliability under a stricter
-duplicate-family split, where a RISK score ranks high-risk windows for expert
-review under fixed review budgets.
+short-window SR/VT/VF prediction is unreliable. The main contribution is not
+ordinary classification accuracy. The final method uses a multi-source
+reliability evidence layer, including RISK, and converts it into `v5d`, a
+mechanism-separated hierarchical routing policy for high-risk review under
+fixed action budgets.
 
 ## Best Application Framing
 
-Use this project when writing to supervisors in trustworthy ML, medical AI
-reliability, uncertainty estimation, calibration, OOD/shift robustness, or
-human-in-the-loop review systems.
+Use this project when writing to supervisors in:
+
+- trustworthy ML and reliable decision systems;
+- medical AI reliability and uncertainty estimation;
+- calibration, selective prediction, and OOD robustness;
+- human-AI teaming and review-routing workflows;
+- representation analysis for safety-adjacent time-series models.
 
 Suggested wording:
 
-> I built a reliability-aware ECG classification pipeline that evaluates
-> uncertainty, embedding geometry, calibration, corruption robustness, and
-> review routing for SR/VT/VF windows. The project emphasizes leakage audits,
-> negative results, duplicate-family splitting, and fixed-budget capture of
-> high-risk VT/VF boundary errors.
+> I built a reliability-aware ECG classification pipeline that goes beyond
+> accuracy by auditing leakage, comparing uncertainty signals, diagnosing VT/VF
+> representation-boundary failures, testing structured model interventions,
+> and converting reliability evidence into a mechanism-separated review-routing
+> policy.
 
 ## What To Read
 
 | Time budget | File | Purpose |
-|---|---|---|
-| 2 minutes | [README](../README.md) | Main question, public evidence, limitations |
-| 5 minutes | [PhD application brief](phd_application_project_brief.md) | Concise supervisor-facing project narrative |
-| 10 minutes | [Evidence index](evidence_index.md) | Claim-by-claim evidence map |
-| 20 minutes | [Research report](RESEARCH_REPORT.md) | Stage-ordered experiment narrative |
-| Deep dive | [Complete compendium](COMPLETE_EXPERIMENT_COMPENDIUM.md) | Full experiment history and interpretation |
+| --- | --- | --- |
+| 2 minutes | [README](../README.md) | Main contribution, result snapshot, and limitations. |
+| 5 minutes | [PhD application brief](phd_application_project_brief.md) | Concise supervisor-facing project narrative. |
+| 10 minutes | [Experiment evidence summary](EXPERIMENT_EVIDENCE_SUMMARY.md) | Why each experiment was done and what it showed. |
+| 15 minutes | [Evidence index](evidence_index.md) | Claim-by-claim public evidence map. |
+| 30 minutes | [Research report](RESEARCH_REPORT.md) | Detailed stage-ordered research report. |
+| Figures | [Figure atlas](FIGURE_ATLAS.md) | Public visual evidence index. |
 
 ## Evidence Snapshot
 
 | Claim | Current evidence | Strength |
-|---|---|---|
-| Data leakage risk is explicitly audited. | Record-level and duplicate-family split audits report zero overlap for seeds 42, 43, 44. | Strong for internal protocol |
-| Accuracy alone is insufficient. | Backbone comparison reports accuracy, macro-F1, ECE, uncertainty, and review-routing views. | Strong framing evidence |
-| RISK is useful for review routing. | Duplicate-family selected RISK tables show fixed-budget VT/VF error capture up to 1.0 at >=20% review burden. | Promising internal evidence |
-| Uncertainty methods vary in usefulness. | Softmax scores are useful in summaries; energy score is weak/inverted in selected results. | Good negative-result reporting |
-| PRO is not overclaimed. | Duplicate-family evidence treats PRO as boundary/error-migration analysis, not stable standalone gain. | Strong claim discipline |
+| --- | --- | --- |
+| Data leakage risk is explicitly audited. | Record-level and duplicate-family split audits report no overlap in the final audited split summaries. | Strong for internal protocol. |
+| Accuracy alone is insufficient. | Backbone comparison reports accuracy, macro-F1, calibration, uncertainty, representation geometry, and review-routing behavior. | Strong framing evidence. |
+| VT/VF is the central fragile boundary. | Embedding geometry, local neighborhood mixing, and boundary-error analyses show VT/VF ambiguity. | Strong internal diagnostic evidence. |
+| Model-side structure is useful but not sufficient. | CNN-LSTM, PRO, ProRisk/Risk-Pro-readable, CNN-TCN-Validity, and wavelet variants reveal improvements, failures, and error migration. | Strong mechanistic evidence, not a final classifier claim. |
+| RISK is a useful evidence score. | Duplicate-family RISK tables show strong fixed-budget review capture, especially for VT/VF boundary errors. | Promising internal evidence. |
+| v5d is the final decision policy. | Ten paired duplicate-family splits show improved VT/VF cross-error capture and lower unresolved VT/VF rate versus v4 routing. | Strongest current internal method result. |
 
 ## What Is Shown
 
-- A complete PyTorch research pipeline for ECG classification, uncertainty,
-  calibration, OOD/corruption testing, embedding analysis, and review routing.
-- A stricter duplicate-family split interpretation to reduce leakage risk.
+- A PyTorch pipeline for ECG classification, uncertainty, calibration,
+  OOD/corruption testing, representation analysis, and review routing.
+- A progression from baseline models to mechanism-guided routing.
 - Public-safe aggregate figures and tables without raw ECG data.
-- Explicit negative and mixed results.
-- A review-routing perspective that asks whether uncertainty captures important
-  errors, not merely whether accuracy improves.
+- Explicit negative and mixed results, including error migration.
+- A final reliability policy that separates VT/VF boundary review from
+  residual error mechanisms.
 
 ## What Remains Unproven
 
 - External clinical validation.
 - Patient-level diagnosis or deployment readiness.
 - Public redistribution rights for the raw ECG dataset.
-- More than three paired seeds for the final duplicate-family comparison.
 - Generalization to other ECG datasets, devices, hospitals, or populations.
+- Replacement of clinician judgment.
 
 ## Best-Fit Supervisor Directions
 
 | Direction | How to position the project |
-|---|---|
-| Trustworthy ML | Reliability scores, leakage audits, negative results, selective prediction. |
-| Medical AI | Expert-review routing for high-risk VT/VF boundary errors. |
-| Calibration / uncertainty | Confidence, entropy, temperature scaling, ECE, coverage-risk curves. |
-| OOD robustness | ECG-like corruptions and severity analysis. |
-| Human-AI teaming | Fixed review-budget capture and review burden tradeoffs. |
-
-## Next Upgrade Before Submission
-
-1. Confirm that the duplicate-family/V6 evidence tables are visible on GitHub
-   before sharing the repository link.
-2. Add a clear dataset provenance statement before any public archival release.
-3. Add an external dataset or cross-source validation if available.
-4. Report confidence intervals or bootstrap summaries alongside the three-seed
-   paired results.
-5. Keep all wording explicit that this is research evidence, not clinical
-   validation.
+| --- | --- |
+| Trustworthy ML | Reliability evidence, negative results, selective prediction, and fixed-budget routing. |
+| Medical AI | Review routing for high-risk VT/VF boundary cases. |
+| Uncertainty and calibration | Confidence, entropy, ECE, coverage-risk curves, and conformal baselines. |
+| Robustness | ECG-like corruption, degradation sensitivity, and OOD-style tests. |
+| Representation learning | Embedding geometry, kNN mixing, prototype conflict, and layerwise diagnostics. |
+| Human-AI teaming | Mechanism-separated routing rather than unconditional automation. |

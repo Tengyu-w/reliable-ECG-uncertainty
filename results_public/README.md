@@ -57,7 +57,8 @@ should not be used to claim that PRO is a stable final improvement.
 - The final duplicate-family summaries also use three random seeds and should
   be interpreted as internal research evidence.
 - Current GitHub positioning treats PRO as boundary-structure/error-migration
-  evidence and RISK as the main deployable review-routing contribution.
+  evidence, RISK as the reliability evidence layer, and v5d as the final
+  review-routing decision policy.
 - The figures are intended to summarise the research direction, not to claim
   clinical validation.
 - Negative and mixed results are part of the public evidence layer; the tables

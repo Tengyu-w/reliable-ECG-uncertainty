@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import csv
@@ -26,6 +26,12 @@ VARIANTS = {
         "prototype_margin_weight": "0.05",
         "prototype_vtvf_margin": "1.0",
     },
+    "boundary_contrastive": {
+        "contrastive_weight": "0.05",
+        "contrastive_temperature": "0.1",
+        "contrastive_boundary_anchor_weight": "2.0",
+        "contrastive_vtvf_negative_weight": "2.0",
+    },
     "regularity_aux": {
         "regularity_aux_weight": "0.05",
     },
@@ -36,6 +42,10 @@ VARIANTS = {
         "prototype_center_weight": "0.02",
         "prototype_margin_weight": "0.05",
         "prototype_vtvf_margin": "1.0",
+        "contrastive_weight": "0.05",
+        "contrastive_temperature": "0.1",
+        "contrastive_boundary_anchor_weight": "2.0",
+        "contrastive_vtvf_negative_weight": "2.0",
         "regularity_aux_weight": "0.05",
     },
 }

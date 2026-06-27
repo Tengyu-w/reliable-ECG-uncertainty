@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from scipy.spatial import cKDTree
 from scipy.signal import welch
 from scipy.stats import kruskal, spearmanr
 
-from .data import CLASS_NAMES, load_rhythm_windows, make_splits
+from .data import CLASS_NAMES, build_duplicate_family_groups, load_rhythm_windows, make_splits
 
 
 def _resolve_run_dir(run_dir: Path) -> Path:
@@ -36,6 +37,19 @@ def _seed_from_checkpoint(run_dir: Path, default: int = 42) -> int:
         return int(state.get("args", {}).get("seed", default))
     except Exception:
         return default
+
+
+def _split_groups_for_run(dataset, run_dir: Path) -> np.ndarray:
+    summary_path = run_dir / "split_summary.json"
+    split_grouping = "record"
+    if summary_path.exists():
+        try:
+            split_grouping = json.loads(summary_path.read_text(encoding="utf-8")).get("split_grouping", "record")
+        except json.JSONDecodeError:
+            split_grouping = "record"
+    if split_grouping == "duplicate_family":
+        return build_duplicate_family_groups(dataset.x, dataset.record_ids)
+    return dataset.record_ids
 
 
 def _spectral_features(x: np.ndarray, fs: int) -> dict[str, float]:
@@ -140,8 +154,15 @@ def main() -> None:
     uncertainty = pd.read_csv(run_dir / "uncertainty_scores.csv")
     dataset = load_rhythm_windows(args.mat)
     seed = _seed_from_checkpoint(run_dir) if args.seed is None else args.seed
-    splits = make_splits(dataset.x, dataset.y, groups=dataset.record_ids, seed=seed)
+    split_groups = _split_groups_for_run(dataset, run_dir)
+    splits = make_splits(dataset.x, dataset.y, groups=split_groups, seed=seed)
     x_test = splits.x_test[:, 0, :]
+    if len(x_test) != len(ambiguity) or len(x_test) != len(uncertainty):
+        raise ValueError(
+            "Regularity feature split length does not match run outputs: "
+            f"x_test={len(x_test)}, ambiguity={len(ambiguity)}, uncertainty={len(uncertainty)}. "
+            "Check split_summary.json and seed."
+        )
 
     feature_rows = [_features_for_signal(x, args.sample_rate) for x in x_test]
     features = pd.DataFrame(feature_rows)

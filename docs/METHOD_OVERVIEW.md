@@ -1,57 +1,82 @@
 # Method Overview
 
-This project is organised around a reliability question:
+This project is organized around a reliability question:
 
-> When should an ECG classifier avoid automatic acceptance and request review?
+> When should an ECG classifier avoid automatic single-label acceptance and
+> request review?
 
 ## Pipeline
 
 ```mermaid
 flowchart TD
-    A["Restricted ECG records: SR / VT / VF"] --> B["5-second windows and z-score normalisation"]
-    B --> C["Record-level train / validation / test split"]
-    C --> D["Time-series classifiers: CNN, TCN, ResNet1D, InceptionTime, BiGRU"]
-    D --> E["Logits, probabilities, embeddings, predictions"]
-    E --> F["Uncertainty and calibration analysis"]
+    A["Restricted ECG records: SR / VT / VF"] --> B["5-second windows and z-score normalization"]
+    B --> C["Record-level and duplicate-family splits"]
+    C --> D["Backbones: CNN, TCN, CNN-LSTM, ResNet1D, InceptionTime, BiGRU, fusion models"]
+    D --> E["Predictions, probabilities, logits, embeddings"]
+    E --> F["Uncertainty and calibration"]
     E --> G["Embedding geometry and VT/VF boundary analysis"]
-    E --> H["Corruption and OOD robustness"]
-    F --> I["Selective prediction"]
+    E --> H["Regularity, corruption, validity, and wavelet evidence"]
+    F --> I["RISK evidence score"]
     G --> I
     H --> I
-    I --> J["Review-routing: accepted subset vs expert-review subset"]
+    I --> J["v5d mechanism-separated hierarchical router"]
+    J --> K["Boundary review / residual mechanism review / automatic label"]
 ```
 
-## Reliability Signals
-
-The repository compares several reliability signals:
+## Reliability Evidence Families
 
 | Signal family | Examples | Reliability question |
-|---|---|---|
+| --- | --- | --- |
 | Decision uncertainty | MSP, entropy, temperature scaling | Is the classifier uncertain about its own decision? |
-| Embedding atypicality | kNN, Mahalanobis, prototype distance | Is the window far from familiar training representations? |
-| Boundary ambiguity | VT/VF probability ambiguity, VT/VF neighbourhood mixing | Is the model near the clinically important ventricular boundary? |
-| Local instability | Neighbourhood disagreement and perturbation sensitivity | Is the prediction stable under local evidence? |
-| ECG regularity | Rhythm/frequency regularity features | Do handcrafted signal features explain reliability failures? |
+| Boundary ambiguity | VT/VF probability ambiguity, VT/VF neighborhood mixing | Is the sample near the fragile VT/VF boundary? |
+| Embedding atypicality | kNN atypicality, prototype distance, center distance | Is the sample far from familiar training representations? |
+| Representation conflict | layerwise shifts, prototype disagreement, model disagreement | Is the internal evidence inconsistent? |
+| Signal structure | regularity, spectral entropy, autocorrelation, wavelet features | Does the ECG morphology suggest ambiguity or degradation? |
+| Robustness evidence | corruption response, OOD-style perturbations | Does reliability degrade under plausible signal shifts? |
+| Validity-domain evidence | local validity maps and boundary validity | Is the prediction inside a region where the model is usually reliable? |
 
-## Main Evaluation Views
+## Model Interventions
 
-The project evaluates reliability from multiple angles:
+The project tests whether the failure can be solved inside the model:
+
+- CNN and TCN baselines establish ordinary time-series classification.
+- CNN-LSTM tests whether explicit temporal recurrence improves boundary
+  behavior.
+- PRO/prototype separation tests whether class-center structure can reduce
+  boundary errors.
+- ProRisk/Risk-Pro-readable adds reliability-oriented constraints.
+- CNN-TCN-Validity and wavelet variants test whether validity-domain and
+  time-frequency boundary evidence help the model.
+
+The main lesson is careful: model-side structure can improve some evidence,
+but representation improvement alone does not guarantee safer VT/VF decisions.
+
+## Final Decision Policy
+
+RISK is the evidence layer. It aggregates reliability evidence into a
+review-priority signal.
+
+v5d is the policy layer. It separates two decisions:
+
+1. VT/VF boundary-first routing for samples that should be treated as boundary
+   risk or `{VT,VF}` prediction-set cases.
+2. Residual mechanism routing for SR-ventricular confusion, representation
+   conflict, atypical signal behavior, and hidden confident errors.
+
+This is why the final method is described as mechanism-separated hierarchical
+review routing, not as a single uncertainty score.
+
+## Evaluation Views
 
 - classification metrics: accuracy, macro-F1, sensitivity, specificity;
 - calibration metrics: ECE and reliability diagrams;
 - uncertainty metrics: error-detection AUROC/AUPR;
-- embedding geometry: class-centroid distances and projection diagnostics;
-- OOD/corruption tests: sensitivity to ECG-like perturbations;
-- selective prediction: coverage-risk behaviour;
-- review routing: error capture at fixed expert-review budgets.
+- embedding geometry: class-center distances and projection diagnostics;
+- robustness: ECG-like corruption and OOD-style perturbations;
+- selective prediction: coverage-risk behavior;
+- review routing: error capture at fixed action budgets;
+- explanation reliability: whether each evidence family matches its intended
+  error mechanism.
 
-## Why Review Routing Matters
-
-Reporting an uncertainty score is not enough. A clinically motivated reliability
-analysis should ask how uncertainty changes the decision policy. This project
-therefore measures how many high-risk VT/VF boundary errors can be captured when
-only a limited fraction of windows is routed for review.
-
-This is still a research prototype. It is intended to test reliability concepts,
-not to make clinical claims.
-
+This is still a research prototype. It is intended to test reliability
+concepts, not to make clinical claims.

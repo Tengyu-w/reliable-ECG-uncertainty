@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import json
@@ -81,6 +81,28 @@ def _forward_with_embedding(
     return model(x, return_embedding=True)
 
 
+def _forward_with_gate(
+    model: nn.Module,
+    x: torch.Tensor,
+    features: torch.Tensor | None,
+    return_embedding: bool,
+):
+    if features is not None:
+        return model(x, features, return_embedding=return_embedding, return_gate=True)
+    return model(x, return_embedding=return_embedding, return_gate=True)
+
+
+def _forward_with_aux(
+    model: nn.Module,
+    x: torch.Tensor,
+    features: torch.Tensor | None,
+    return_embedding: bool,
+):
+    if features is not None:
+        return model(x, features, return_embedding=return_embedding, return_gate=True, return_aux=True)
+    return model(x, return_embedding=return_embedding, return_gate=True, return_aux=True)
+
+
 def _prototype_losses(
     emb: torch.Tensor,
     y: torch.Tensor,
@@ -104,6 +126,45 @@ def _prototype_losses(
         vt_vf_distance = torch.norm(centers[1] - centers[2], p=2)
         margin_loss = F.relu(torch.as_tensor(margin, device=emb.device) - vt_vf_distance).pow(2)
     return center_weight * center_loss, margin_weight * margin_loss
+
+
+def _boundary_aware_contrastive_loss(
+    emb: torch.Tensor,
+    y: torch.Tensor,
+    temperature: float,
+    boundary_anchor_weight: float,
+    vtvf_negative_weight: float,
+) -> torch.Tensor:
+    if emb.shape[0] < 2:
+        return torch.zeros((), device=emb.device)
+    emb = F.normalize(emb, dim=1)
+    logits = emb @ emb.T / max(temperature, 1e-6)
+    self_mask = torch.eye(emb.shape[0], dtype=torch.bool, device=emb.device)
+    same_class = y[:, None] == y[None, :]
+    positive_mask = same_class & ~self_mask
+    valid_anchor = positive_mask.any(dim=1)
+    if not torch.any(valid_anchor):
+        return torch.zeros((), device=emb.device)
+
+    vtvf_pair = ((y[:, None] == 1) & (y[None, :] == 2)) | ((y[:, None] == 2) & (y[None, :] == 1))
+    if vtvf_negative_weight > 1.0:
+        logits = logits + torch.log(torch.as_tensor(vtvf_negative_weight, device=emb.device)) * vtvf_pair.float()
+    logits = logits.masked_fill(self_mask, torch.finfo(logits.dtype).min)
+    log_prob = logits - torch.logsumexp(logits, dim=1, keepdim=True)
+    anchor_loss = -(log_prob * positive_mask.float()).sum(dim=1) / positive_mask.sum(dim=1).clamp_min(1)
+    anchor_weight = torch.where(y != 0, torch.full_like(anchor_loss, boundary_anchor_weight), torch.ones_like(anchor_loss))
+    anchor_weight = anchor_weight * valid_anchor.float()
+    return (anchor_loss * anchor_weight).sum() / anchor_weight.sum().clamp_min(1e-6)
+
+
+def _normalised_entropy_from_logits(logits: torch.Tensor) -> torch.Tensor:
+    probs = F.softmax(logits, dim=1)
+    ent = -(probs * torch.log(probs.clamp_min(1e-12))).sum(dim=1)
+    return ent / np.log(logits.shape[1])
+
+
+def _weighted_mean(values: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+    return (values * weights).sum() / weights.sum().clamp_min(1e-6)
 
 
 @torch.no_grad()
@@ -131,6 +192,40 @@ def predict(model: nn.Module, loader: DataLoader, device: torch.device) -> tuple
     return np.concatenate(logits_all), np.concatenate(emb_all), np.concatenate(y_all)
 
 
+@torch.no_grad()
+def predict_gate_scores(model: nn.Module, loader: DataLoader, device: torch.device) -> pd.DataFrame:
+    model.eval()
+    rows = []
+    for batch in loader:
+        if len(batch) == 4:
+            xb, fb, _, yb = batch
+            fb = fb.to(device)
+        elif len(batch) == 3 and batch[1].ndim == 2:
+            xb, fb, yb = batch
+            fb = fb.to(device)
+        elif len(batch) == 3:
+            xb, _, yb = batch
+            fb = None
+        else:
+            xb, yb = batch
+            fb = None
+        xb = xb.to(device)
+        logits, gate, boundary_logit = _forward_with_gate(model, xb, fb, return_embedding=False)
+        probs = F.softmax(logits, dim=1)
+        rows.append(
+            pd.DataFrame(
+                {
+                    "y_true": yb.numpy(),
+                    "y_pred": probs.argmax(dim=1).cpu().numpy(),
+                    "confidence": probs.max(dim=1).values.cpu().numpy(),
+                    "validity_gate": gate.detach().cpu().numpy(),
+                    "boundary_score": torch.sigmoid(boundary_logit).detach().cpu().numpy(),
+                }
+            )
+        )
+    return pd.concat(rows, ignore_index=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mat", type=Path, required=True)
@@ -142,6 +237,10 @@ def main() -> None:
             "resnet1d",
             "inception_time",
             "bigru",
+            "cnn_lstm",
+            "cnn_tcn_validity",
+            "cnn_tcn_validity_v2",
+            "cnn_wavelet_tcn_boundary",
             "regularity_fusion",
             "reliability_gated_fusion",
         ],
@@ -167,6 +266,12 @@ def main() -> None:
     parser.add_argument("--risk-targets", type=Path, default=None)
     parser.add_argument("--risk-boundary-weight", type=float, default=0.0)
     parser.add_argument("--risk-gate-weight", type=float, default=0.0)
+    parser.add_argument(
+        "--risk-entropy-weight",
+        type=float,
+        default=0.0,
+        help="Align predictive entropy with teacher risk targets; requires --risk-targets.",
+    )
     parser.add_argument(
         "--boundary-ce-weight",
         type=float,
@@ -202,10 +307,59 @@ def main() -> None:
     )
     parser.add_argument("--prototype-vtvf-margin", type=float, default=1.0)
     parser.add_argument(
+        "--contrastive-weight",
+        type=float,
+        default=0.0,
+        help="Boundary-aware supervised contrastive loss on batch embeddings.",
+    )
+    parser.add_argument("--contrastive-temperature", type=float, default=0.1)
+    parser.add_argument(
+        "--contrastive-boundary-anchor-weight",
+        type=float,
+        default=2.0,
+        help="Anchor weight for VT/VF samples in boundary-aware contrastive training.",
+    )
+    parser.add_argument(
+        "--contrastive-vtvf-negative-weight",
+        type=float,
+        default=2.0,
+        help="Extra denominator weight for VT-versus-VF negative pairs.",
+    )
+    parser.add_argument(
         "--regularity-aux-weight",
         type=float,
         default=0.0,
         help="Auxiliary MSE loss that predicts regularity features from the fused embedding.",
+    )
+    parser.add_argument(
+        "--vtvf-readability-weight",
+        type=float,
+        default=0.0,
+        help="Auxiliary VT-vs-VF linear head loss on embeddings to make the ventricular boundary linearly readable.",
+    )
+    parser.add_argument(
+        "--selective-stability-consistency-weight",
+        type=float,
+        default=0.0,
+        help="Prediction consistency on low-risk samples only; requires --risk-targets.",
+    )
+    parser.add_argument(
+        "--selective-embedding-consistency-weight",
+        type=float,
+        default=0.0,
+        help="Embedding consistency on low-risk samples only; requires --risk-targets.",
+    )
+    parser.add_argument(
+        "--anti-confident-risk-weight",
+        type=float,
+        default=0.0,
+        help="Penalize high maximum softmax confidence on high-risk samples; requires --risk-targets.",
+    )
+    parser.add_argument(
+        "--vtvf-specialist-weight",
+        type=float,
+        default=0.0,
+        help="Auxiliary CE weight for a model-internal VT/VF specialist head; requires a validity specialist model.",
     )
     parser.add_argument("--run-suffix", type=str, default="")
     parser.add_argument("--out", type=Path, default=Path("results"))
@@ -257,33 +411,66 @@ def main() -> None:
         np.savez(run_dir / "risk_targets_used.npz", train=train_risk, val=val_risk, test=test_risk, source=str(args.risk_targets))
     if args.boundary_ce_weight > 0 and train_risk is None:
         raise ValueError("--boundary-ce-weight requires --risk-targets generated from the same data split.")
+    if args.risk_entropy_weight > 0 and train_risk is None:
+        raise ValueError("--risk-entropy-weight requires --risk-targets generated from the same data split.")
+    if (
+        args.selective_stability_consistency_weight > 0
+        or args.selective_embedding_consistency_weight > 0
+        or args.anti_confident_risk_weight > 0
+    ) and train_risk is None:
+        raise ValueError("Selective stability and anti-confident-risk losses require --risk-targets.")
 
     model = build_model(args.model, num_classes=len(CLASS_NAMES), feature_dim=len(REGULARITY_FEATURE_NAMES)).to(device)
     regularity_aux_head = None
     if args.regularity_aux_weight > 0:
         regularity_aux_head = nn.Linear(128, len(REGULARITY_FEATURE_NAMES)).to(device)
+    vtvf_readability_head = None
+    if args.vtvf_readability_weight > 0:
+        vtvf_readability_head = nn.Linear(128, 2).to(device)
     optim_params = list(model.parameters())
     if regularity_aux_head is not None:
         optim_params.extend(regularity_aux_head.parameters())
+    if vtvf_readability_head is not None:
+        optim_params.extend(vtvf_readability_head.parameters())
     optimizer = torch.optim.AdamW(optim_params, lr=args.lr, weight_decay=1e-4)
     weights = None if args.no_class_weights else _class_weights(splits.y_train, len(CLASS_NAMES)).to(device)
     loss_fn = nn.CrossEntropyLoss(weight=weights, reduction="none")
-    use_consistency_training = args.stability_consistency_weight > 0 or args.embedding_consistency_weight > 0
+    use_consistency_training = (
+        args.stability_consistency_weight > 0
+        or args.embedding_consistency_weight > 0
+        or args.selective_stability_consistency_weight > 0
+        or args.selective_embedding_consistency_weight > 0
+    )
     use_prototype_training = args.prototype_center_weight > 0 or args.prototype_margin_weight > 0
+    use_contrastive_training = args.contrastive_weight > 0
     use_regularity_aux = regularity_aux_head is not None
-    is_gated_model = args.model == "reliability_gated_fusion"
+    use_vtvf_readability = vtvf_readability_head is not None
+    is_gated_model = args.model in {
+        "reliability_gated_fusion",
+        "cnn_tcn_validity",
+        "cnn_tcn_validity_v2",
+        "cnn_wavelet_tcn_boundary",
+    }
+    is_specialist_model = args.model in {"cnn_tcn_validity_v2", "cnn_wavelet_tcn_boundary"}
+    if args.vtvf_specialist_weight > 0 and not is_specialist_model:
+        raise ValueError("--vtvf-specialist-weight currently requires cnn_tcn_validity_v2 or cnn_wavelet_tcn_boundary.")
     use_auxiliary_losses = is_gated_model and (
         args.aux_boundary_weight > 0
         or args.gate_target_weight > 0
         or args.gate_sparsity_weight > 0
         or args.risk_boundary_weight > 0
         or args.risk_gate_weight > 0
+        or args.vtvf_specialist_weight > 0
     )
     boundary_pos = float(np.mean(splits.y_train != 0))
     boundary_pos_weight = torch.tensor([(1.0 - boundary_pos) / max(boundary_pos, 1e-6)], device=device)
     boundary_loss_fn = nn.BCEWithLogitsLoss(pos_weight=boundary_pos_weight)
     gate_loss_fn = nn.BCELoss()
     risk_loss_fn = nn.MSELoss()
+    vtvf_train_counts = np.bincount(np.maximum(splits.y_train[splits.y_train != 0] - 1, 0), minlength=2).astype(np.float32)
+    vtvf_specialist_class_weights = vtvf_train_counts.sum() / np.maximum(vtvf_train_counts, 1.0)
+    vtvf_specialist_class_weights = vtvf_specialist_class_weights / vtvf_specialist_class_weights.mean()
+    vtvf_specialist_class_weights_t = torch.from_numpy(vtvf_specialist_class_weights.astype(np.float32)).to(device)
 
     train_loader = _loader(
         splits.x_train,
@@ -321,10 +508,12 @@ def main() -> None:
         "split_grouping": args.split_grouping,
         "n_split_groups": int(np.unique(split_groups).size),
         "class_weights": None if weights is None else weights.detach().cpu().numpy().tolist(),
+        "vtvf_specialist_class_weights": vtvf_specialist_class_weights.tolist(),
         "regularity_features": feature_scaler,
         "risk_targets": None if args.risk_targets is None else str(args.risk_targets),
         "reliability_guided_mitigation": {
             "boundary_ce_weight": args.boundary_ce_weight,
+            "risk_entropy_weight": args.risk_entropy_weight,
             "stability_consistency_weight": args.stability_consistency_weight,
             "embedding_consistency_weight": args.embedding_consistency_weight,
             "perturb_noise_std": args.perturb_noise_std,
@@ -333,7 +522,16 @@ def main() -> None:
             "prototype_center_weight": args.prototype_center_weight,
             "prototype_margin_weight": args.prototype_margin_weight,
             "prototype_vtvf_margin": args.prototype_vtvf_margin,
+            "contrastive_weight": args.contrastive_weight,
+            "contrastive_temperature": args.contrastive_temperature,
+            "contrastive_boundary_anchor_weight": args.contrastive_boundary_anchor_weight,
+            "contrastive_vtvf_negative_weight": args.contrastive_vtvf_negative_weight,
             "regularity_aux_weight": args.regularity_aux_weight,
+            "vtvf_readability_weight": args.vtvf_readability_weight,
+            "selective_stability_consistency_weight": args.selective_stability_consistency_weight,
+            "selective_embedding_consistency_weight": args.selective_embedding_consistency_weight,
+            "anti_confident_risk_weight": args.anti_confident_risk_weight,
+            "vtvf_specialist_weight": args.vtvf_specialist_weight,
         },
     }
     (run_dir / "split_summary.json").write_text(json.dumps(split_summary, indent=2), encoding="utf-8")
@@ -341,7 +539,8 @@ def main() -> None:
     for epoch in range(1, args.epochs + 1):
         model.train()
         losses, ce_losses, boundary_losses, gate_losses, sparsity_losses = [], [], [], [], []
-        risk_losses, consistency_losses, prototype_losses, regularity_aux_losses = [], [], [], []
+        risk_losses, entropy_alignment_losses, consistency_losses, prototype_losses, contrastive_losses, regularity_aux_losses = [], [], [], [], [], []
+        vtvf_readability_losses, anti_confident_losses, vtvf_specialist_losses = [], [], []
         for batch in tqdm(train_loader, desc=f"epoch {epoch}", leave=False):
             riskb = None
             if len(batch) == 4:
@@ -360,14 +559,26 @@ def main() -> None:
                 fb = None
             xb, yb = xb.to(device), yb.to(device)
             optimizer.zero_grad()
-            need_embedding = use_consistency_training or use_prototype_training or use_regularity_aux
-            if use_auxiliary_losses and need_embedding:
-                logits, emb, gate, boundary_logit = model(xb, fb, return_embedding=True, return_gate=True)
+            need_embedding = (
+                use_consistency_training
+                or use_prototype_training
+                or use_contrastive_training
+                or use_regularity_aux
+                or use_vtvf_readability
+            )
+            aux = None
+            if is_specialist_model and use_auxiliary_losses and need_embedding:
+                logits, emb, gate, boundary_logit, aux = _forward_with_aux(model, xb, fb, return_embedding=True)
+            elif is_specialist_model and use_auxiliary_losses:
+                logits, gate, boundary_logit, aux = _forward_with_aux(model, xb, fb, return_embedding=False)
+                emb = None
+            elif use_auxiliary_losses and need_embedding:
+                logits, emb, gate, boundary_logit = _forward_with_gate(model, xb, fb, return_embedding=True)
             elif need_embedding:
                 logits, emb = _forward_with_embedding(model, xb, fb)
                 gate = boundary_logit = None
             elif use_auxiliary_losses:
-                logits, gate, boundary_logit = model(xb, fb, return_gate=True)
+                logits, gate, boundary_logit = _forward_with_gate(model, xb, fb, return_embedding=False)
                 emb = None
             else:
                 logits = model(xb, fb) if fb is not None else model(xb)
@@ -383,9 +594,24 @@ def main() -> None:
             boundary_loss = torch.zeros((), device=device)
             gate_loss = torch.zeros((), device=device)
             sparsity_loss = torch.zeros((), device=device)
+            entropy_alignment_loss = torch.zeros((), device=device)
             consistency_loss = torch.zeros((), device=device)
             prototype_loss = torch.zeros((), device=device)
+            contrastive_loss = torch.zeros((), device=device)
             regularity_aux_loss = torch.zeros((), device=device)
+            vtvf_readability_loss = torch.zeros((), device=device)
+            anti_confident_loss = torch.zeros((), device=device)
+            vtvf_specialist_loss = torch.zeros((), device=device)
+            if riskb is not None and args.risk_entropy_weight > 0:
+                entropy_alignment_loss = args.risk_entropy_weight * F.mse_loss(
+                    _normalised_entropy_from_logits(logits),
+                    riskb,
+                )
+                loss = loss + entropy_alignment_loss
+            if riskb is not None and args.anti_confident_risk_weight > 0:
+                max_conf = F.softmax(logits, dim=1).max(dim=1).values
+                anti_confident_loss = args.anti_confident_risk_weight * _weighted_mean(max_conf.pow(2), riskb)
+                loss = loss + anti_confident_loss
             if use_auxiliary_losses:
                 ventricular_target = (yb != 0).float()
                 gate_target = torch.where(
@@ -411,6 +637,16 @@ def main() -> None:
                     risk_gate_loss = risk_loss_fn(gate, riskb)
                     loss = loss + args.risk_gate_weight * risk_gate_loss
                     risk_boundary_loss = risk_boundary_loss + risk_gate_loss
+                if args.vtvf_specialist_weight > 0 and aux is not None:
+                    vtvf_mask = yb != 0
+                    if torch.any(vtvf_mask):
+                        vtvf_target = (yb[vtvf_mask] == 2).long()
+                        vtvf_specialist_loss = args.vtvf_specialist_weight * F.cross_entropy(
+                            aux["vtvf_specialist_logits"][vtvf_mask],
+                            vtvf_target,
+                            weight=vtvf_specialist_class_weights_t,
+                        )
+                        loss = loss + vtvf_specialist_loss
             if use_consistency_training:
                 xb_aug = _mild_perturbation(
                     xb,
@@ -426,6 +662,25 @@ def main() -> None:
                 if args.embedding_consistency_weight > 0 and emb is not None:
                     emb_consistency = F.mse_loss(aug_emb, emb.detach())
                     consistency_loss = consistency_loss + args.embedding_consistency_weight * emb_consistency
+                if riskb is not None and args.selective_stability_consistency_weight > 0:
+                    clean_prob = F.softmax(logits.detach(), dim=1)
+                    per_sample_kl = F.kl_div(
+                        F.log_softmax(aug_logits, dim=1),
+                        clean_prob,
+                        reduction="none",
+                    ).sum(dim=1)
+                    low_risk_weight = (1.0 - riskb).clamp(0.0, 1.0)
+                    consistency_loss = consistency_loss + args.selective_stability_consistency_weight * _weighted_mean(
+                        per_sample_kl,
+                        low_risk_weight,
+                    )
+                if riskb is not None and args.selective_embedding_consistency_weight > 0 and emb is not None:
+                    per_sample_emb = F.mse_loss(aug_emb, emb.detach(), reduction="none").mean(dim=1)
+                    low_risk_weight = (1.0 - riskb).clamp(0.0, 1.0)
+                    consistency_loss = consistency_loss + args.selective_embedding_consistency_weight * _weighted_mean(
+                        per_sample_emb,
+                        low_risk_weight,
+                    )
                 loss = loss + consistency_loss
             if use_prototype_training and emb is not None:
                 center_loss, margin_loss = _prototype_losses(
@@ -437,10 +692,26 @@ def main() -> None:
                 )
                 prototype_loss = center_loss + margin_loss
                 loss = loss + prototype_loss
+            if use_contrastive_training and emb is not None:
+                contrastive_loss = args.contrastive_weight * _boundary_aware_contrastive_loss(
+                    emb,
+                    yb,
+                    temperature=args.contrastive_temperature,
+                    boundary_anchor_weight=args.contrastive_boundary_anchor_weight,
+                    vtvf_negative_weight=args.contrastive_vtvf_negative_weight,
+                )
+                loss = loss + contrastive_loss
             if use_regularity_aux and emb is not None and fb is not None:
                 regularity_pred = regularity_aux_head(emb)
                 regularity_aux_loss = F.mse_loss(regularity_pred, fb)
                 loss = loss + args.regularity_aux_weight * regularity_aux_loss
+            if use_vtvf_readability and emb is not None:
+                vtvf_mask = yb != 0
+                if torch.any(vtvf_mask):
+                    vtvf_logits = vtvf_readability_head(emb[vtvf_mask])
+                    vtvf_target = (yb[vtvf_mask] == 2).long()
+                    vtvf_readability_loss = args.vtvf_readability_weight * F.cross_entropy(vtvf_logits, vtvf_target)
+                    loss = loss + vtvf_readability_loss
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
@@ -449,9 +720,14 @@ def main() -> None:
             gate_losses.append(gate_loss.item())
             sparsity_losses.append(sparsity_loss.item())
             risk_losses.append(risk_boundary_loss.item() if use_auxiliary_losses else 0.0)
+            entropy_alignment_losses.append(entropy_alignment_loss.item())
             consistency_losses.append(consistency_loss.item())
             prototype_losses.append(prototype_loss.item())
+            contrastive_losses.append(contrastive_loss.item())
             regularity_aux_losses.append(regularity_aux_loss.item())
+            vtvf_readability_losses.append(vtvf_readability_loss.item())
+            anti_confident_losses.append(anti_confident_loss.item())
+            vtvf_specialist_losses.append(vtvf_specialist_loss.item())
 
         val_logits, _, val_y = predict(model, val_loader, device)
         val_probs = softmax(val_logits)
@@ -464,9 +740,14 @@ def main() -> None:
             "train_gate_loss": float(np.mean(gate_losses)),
             "train_gate_sparsity": float(np.mean(sparsity_losses)),
             "train_risk_loss": float(np.mean(risk_losses)),
+            "train_entropy_alignment_loss": float(np.mean(entropy_alignment_losses)),
             "train_consistency_loss": float(np.mean(consistency_losses)),
             "train_prototype_loss": float(np.mean(prototype_losses)),
+            "train_contrastive_loss": float(np.mean(contrastive_losses)),
             "train_regularity_aux_loss": float(np.mean(regularity_aux_losses)),
+            "train_vtvf_readability_loss": float(np.mean(vtvf_readability_losses)),
+            "train_anti_confident_loss": float(np.mean(anti_confident_losses)),
+            "train_vtvf_specialist_loss": float(np.mean(vtvf_specialist_losses)),
             "val_accuracy": val_metrics["accuracy"],
             "val_macro_f1": val_metrics["macro_f1"],
             "val_ece": expected_calibration_error(val_y, val_probs),
@@ -479,6 +760,8 @@ def main() -> None:
             payload = {"model": model.state_dict(), "args": safe_args}
             if regularity_aux_head is not None:
                 payload["regularity_aux_head"] = regularity_aux_head.state_dict()
+            if vtvf_readability_head is not None:
+                payload["vtvf_readability_head"] = vtvf_readability_head.state_dict()
             torch.save(payload, best_path)
 
     pd.DataFrame(history).to_csv(run_dir / "history.csv", index=False)
@@ -487,6 +770,8 @@ def main() -> None:
     for split_name, loader in [("train", train_loader), ("val", val_loader), ("test", test_loader)]:
         logits, emb, yy = predict(model, loader, device)
         np.savez(run_dir / f"embeddings_{split_name}.npz", logits=logits, embeddings=emb, y=yy)
+        if is_gated_model:
+            predict_gate_scores(model, loader, device).to_csv(run_dir / f"validity_gate_scores_{split_name}.csv", index=False)
 
     test_logits, _, test_y = predict(model, test_loader, device)
     test_probs = softmax(test_logits)
@@ -503,6 +788,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
