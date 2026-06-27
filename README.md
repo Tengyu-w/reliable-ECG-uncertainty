@@ -85,6 +85,38 @@ hierarchical routing mechanism:
    SR-ventricular confusion, representation conflict, atypical signal evidence,
    and hidden confident errors.
 
+```mermaid
+flowchart TD
+    A["ECG window"] --> B["Base SR / VT / VF classifier"]
+    B --> C["Prediction, probabilities, logits, embedding"]
+    C --> D["Reliability evidence layer"]
+
+    D --> E1["Softmax VT/VF ambiguity"]
+    D --> E2["Validity-domain boundary evidence"]
+    D --> E3["Wavelet / time-frequency boundary risk"]
+    D --> E4["Representation conflict and kNN mixing"]
+    D --> E5["Regularity / atypical signal evidence"]
+    D --> E6["Hidden confident-error evidence"]
+
+    E1 --> F["Stage 1: VT/VF boundary-first gate"]
+    E2 --> F
+    E3 --> F
+
+    F -->|High boundary risk| G["Route to VT/VF review or {VT,VF} set"]
+    F -->|Not boundary-dominant| H["Stage 2: residual mechanism router"]
+
+    E4 --> H
+    E5 --> H
+    E6 --> H
+
+    H -->|Residual risk selected| I["Route to mechanism-specific review"]
+    H -->|Low residual risk| J["Automatic single-label output"]
+
+    G --> K["Fixed action budget evaluation"]
+    I --> K
+    J --> K
+```
+
 Across ten paired duplicate-family splits, `v5d` with a 20% residual-budget
 reserve achieved the following at a 20% action budget:
 
@@ -165,6 +197,45 @@ The answer was mixed.
 This negative result is central. It is why the final method became a routing
 system instead of only another classifier architecture.
 
+## Why Embedding Evidence Is Used For Routing
+
+The project uses embedding analysis as diagnostic evidence, not as a guarantee
+that changing the embedding will automatically fix the classifier.
+
+This distinction is important:
+
+- Embedding geometry can reveal where VT/VF boundary samples are locally mixed.
+- kNN atypicality, prototype conflict, and representation instability can help
+  identify samples that deserve review.
+- But forcing representations to look more separated can also make the wrong
+  regions more stable and more confident.
+- Therefore, embedding evidence is most reliable when it is tested by
+  downstream error capture, not when it is treated as proof that the classifier
+  has become safer.
+
+This is why the final system uses representation evidence inside the routing
+policy. It does not claim that embedding regularization alone solves VT/VF
+classification.
+
+## Internal Stress Test For Dataset Size Effects
+
+The project also checks whether the routing result could be an artifact of a
+small internal dataset or an unusually favorable validation split.
+
+Two internal stress tests were used:
+
+- Validation downsampling: the boundary-first router stayed stable when the
+  validation evidence was reduced. At a 10% action budget, VT/VF capture was
+  90.3% with 25% validation evidence versus 90.4% with the full validation
+  evidence. At a 20% budget, both were about 99.7%.
+- Cluster concentration audit: VT/VF capture was partly concentrated in a few
+  duplicate-family clusters, so the project also reported capture after
+  removing the largest cluster. Without the top cluster, capture remained 76.6%
+  at a 10% budget and 99.3% at a 20% budget.
+
+These tests do not replace external validation, but they reduce the risk that
+the final result is only a small-sample artifact.
+
 ## Final Routing Policy
 
 `RISK` is the evidence layer. It combines signals such as:
@@ -186,6 +257,10 @@ system instead of only another classifier architecture.
 - allow lower-risk samples to keep a single automated label;
 - evaluate every policy under fixed action budgets rather than only by
   accuracy.
+
+The routing diagram above is the intended reading of the final method: RISK and
+other reliability signals are not used as a single threshold only. They are
+organized into a boundary-first decision branch and a residual mechanism branch.
 
 Public v5d figures:
 

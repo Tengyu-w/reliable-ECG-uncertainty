@@ -162,6 +162,32 @@ This negative result is important because it motivates the final method:
 > The project should not only build a more complex classifier. It should build
 > a decision policy that routes different error mechanisms differently.
 
+## 7. Why Embedding Helps Routing But Does Not Guarantee Model Improvement
+
+The project makes a deliberate distinction between diagnostic evidence and
+optimization targets.
+
+Embedding analysis is useful because it exposes where the classifier is
+structurally uncertain: VT/VF mixing, kNN atypicality, prototype conflict,
+layerwise instability, and local representation disagreement. These signals
+can be evaluated directly by asking whether they capture future errors under a
+fixed review budget.
+
+However, embedding improvement is not the same as decision reliability.
+Structured models such as PRO, ProRisk/Risk-Pro-readable, CNN-LSTM, and
+CNN-TCN/Validity variants showed that a representation can become smoother or
+more separated while the classifier still makes VT/VF errors. In some cases,
+the intervention can make wrong regions more stable and more confident. This
+is why the project does not use embedding geometry alone as a success
+criterion.
+
+The final interpretation is:
+
+- embedding analysis is strong evidence for mechanism diagnosis;
+- embedding-derived scores are useful routing features when validated against
+  error capture;
+- embedding regularization alone is not a sufficient model-improvement proof.
+
 Relevant evidence:
 
 - `src/run_core_intervention_pipeline.py`
@@ -173,7 +199,7 @@ Relevant evidence:
 - `results_public/figures/06_pro_geometry/`
 - `results_public/figures/10_v6_pro_error_migration/`
 
-## 7. From RISK Score To v5d Decision Policy
+## 8. From RISK Score To v5d Decision Policy
 
 The original RISK score was designed as a review-priority evidence score. It
 combines reliability evidence such as uncertainty, embedding atypicality,
@@ -193,6 +219,38 @@ router:
 This turns the project from a single-score uncertainty method into a
 multi-mechanism review-routing policy.
 
+```mermaid
+flowchart TD
+    A["ECG window"] --> B["Base SR / VT / VF classifier"]
+    B --> C["Prediction, probabilities, logits, embedding"]
+    C --> D["Reliability evidence layer"]
+
+    D --> E1["Softmax VT/VF ambiguity"]
+    D --> E2["Validity-domain boundary evidence"]
+    D --> E3["Wavelet / time-frequency boundary risk"]
+    D --> E4["Representation conflict and kNN mixing"]
+    D --> E5["Regularity / atypical signal evidence"]
+    D --> E6["Hidden confident-error evidence"]
+
+    E1 --> F["Stage 1: VT/VF boundary-first gate"]
+    E2 --> F
+    E3 --> F
+
+    F -->|High boundary risk| G["Route to VT/VF review or {VT,VF} set"]
+    F -->|Not boundary-dominant| H["Stage 2: residual mechanism router"]
+
+    E4 --> H
+    E5 --> H
+    E6 --> H
+
+    H -->|Residual risk selected| I["Route to mechanism-specific review"]
+    H -->|Low residual risk| J["Automatic single-label output"]
+
+    G --> K["Fixed action budget evaluation"]
+    I --> K
+    J --> K
+```
+
 Key result across ten paired duplicate-family splits at a 20% action budget:
 
 | Method | All-error capture | VT/VF cross-error capture | Automatic unresolved VT/VF rate |
@@ -209,7 +267,34 @@ Relevant evidence:
 - `src/compare_routing_baselines_10seed.py`
 - `results_public/figures/12_v5d_hierarchical_router/`
 
-## 8. Final Upgrades For PhD Presentation
+## 9. Internal Stress Test For Dataset Size Effects
+
+Because the dataset is internal and not large, the project includes stress
+tests for whether the routing result is inflated by small-sample effects.
+
+The validation downsampling test asks whether the router depends too strongly
+on a favorable validation set. The result was stable: at a 10% action budget,
+VT/VF capture was 90.3% using only 25% of the validation evidence and 90.4%
+using the full validation evidence. At a 20% action budget, both settings
+captured about 99.7% of VT/VF cross-errors.
+
+The cluster concentration audit asks whether the result is dominated by a
+single duplicate-family cluster. The top cluster did explain a large fraction
+of captured VT/VF errors, so the project also evaluated capture without it.
+After removing the top cluster, VT/VF capture remained 76.6% at a 10% action
+budget and 99.3% at a 20% action budget.
+
+These tests do not solve the external-validation limitation, but they show that
+the final routing result is not only a trivial artifact of one favorable
+validation split or one dominant cluster.
+
+Relevant evidence:
+
+- `src/internal_stress_test_v5c.py`
+- `src/compare_routing_baselines_10seed.py`
+- `results_public/figures/12_v5d_hierarchical_router/`
+
+## 10. Final Upgrades For PhD Presentation
 
 Three final upgrades were added to make the repository closer to a modern
 research portfolio:
@@ -225,7 +310,7 @@ model. The explanation audit found that boundary and representation evidence
 aligned best with their intended mechanisms, while regularity and
 hidden-confidence explanations should be interpreted more cautiously.
 
-## 9. Final Claim
+## 11. Final Claim
 
 The project's final contribution is not simply a better ECG classifier.
 
@@ -237,7 +322,7 @@ The strongest claim is:
 
 RISK is the evidence layer. v5d is the final decision policy.
 
-## 10. Limitations
+## 12. Limitations
 
 - The evidence is internal and has not been externally clinically validated.
 - The public repository excludes raw ECG data, checkpoints, embeddings, and

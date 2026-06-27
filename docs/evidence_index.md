@@ -24,8 +24,10 @@ reading every experiment script.
 | VT/VF is the central fragile boundary. | [model_performance_and_geometry.csv](../results_public/tables/model_performance_and_geometry.csv), [embedding figures](../results_public/figures/01_embedding_pca/). |
 | Uncertainty signals are compared rather than assumed. | [uncertainty_error_detection.csv](../results_public/tables/uncertainty_error_detection.csv), [uncertainty figures](../results_public/figures/02_uncertainty_calibration/). |
 | Structured model interventions are not overclaimed. | [duplicate_family_pro_error_migration_mean_std.csv](../results_public/tables/duplicate_family_pro_error_migration_mean_std.csv), [PRO error-migration figures](../results_public/figures/10_v6_pro_error_migration/). |
+| Embedding analysis is diagnostic rather than a guaranteed model fix. | [EXPERIMENT_EVIDENCE_SUMMARY.md](EXPERIMENT_EVIDENCE_SUMMARY.md), [RESEARCH_REPORT.md](RESEARCH_REPORT.md), `src/top_journal_reliability_directions.py`. |
 | RISK is the reliability evidence layer. | [duplicate_family_selected_risk_review_aggregate.csv](../results_public/tables/duplicate_family_selected_risk_review_aggregate.csv), [RISK figures](../results_public/figures/11_v6_risk_distillation/). |
 | v5d is the final decision policy. | [v5d figures](../results_public/figures/12_v5d_hierarchical_router/), [EXPERIMENT_EVIDENCE_SUMMARY.md](EXPERIMENT_EVIDENCE_SUMMARY.md). |
+| The final router is stress-tested against small-sample concerns. | [EXPERIMENT_EVIDENCE_SUMMARY.md](EXPERIMENT_EVIDENCE_SUMMARY.md), `src/internal_stress_test_v5c.py`, `src/compare_routing_baselines_10seed.py`. |
 | Frozen encoder comparison is included as a foundation-model-ready baseline. | [frozen encoder figures](../results_public/figures/13_frozen_ssl_encoder/), `src/frozen_ssl_encoder_comparison.py`. |
 | Explanation reliability is evaluated rather than only visualized. | [explanation audit figures](../results_public/figures/14_explanation_reliability/), `src/explanation_reliability_audit.py`. |
 

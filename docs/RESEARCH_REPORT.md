@@ -364,6 +364,30 @@ shows that the representation boundary can be manipulated, but it is not a
 stable standalone solution under the stricter split. This result motivates
 review-routing supervision rather than weakening the project.
 
+### Why Embedding Evidence Is Diagnostic, Not A Guaranteed Fix
+
+The project uses embedding evidence in two different ways, and the distinction
+is essential.
+
+As analysis, embedding geometry is useful. PCA, class-center distances, kNN
+mixing, prototype conflict, and layerwise representation diagnostics expose
+where the model is likely to confuse VT and VF. These signals can then be
+tested against downstream error capture. In that role, embedding evidence is a
+mechanism diagnosis and a routing feature.
+
+As a direct model-improvement objective, embedding geometry is weaker. The
+structured intervention results show why. A model can make the representation
+space look more regular while preserving or even stabilizing the wrong
+decision regions. This means "better separated embeddings" and "safer VT/VF
+classification" are related hypotheses, not the same claim.
+
+The final interpretation is therefore careful:
+
+- embedding analysis helps identify the kind of failure;
+- embedding-derived signals can help route uncertain samples;
+- embedding regularization alone is not accepted as proof that the classifier
+  has become safer.
+
 ## 10. Stage 8: RISK As Reliability-Privileged Knowledge Distillation
 
 RISK is a core evidence layer because it directly matches the review-routing
@@ -443,6 +467,40 @@ signal evidence, and related non-boundary mechanisms. This prevents the
 boundary branch from consuming the entire action budget under low-budget
 settings.
 
+The routing mechanism can be read as the following decision graph:
+
+```mermaid
+flowchart TD
+    A["ECG window"] --> B["Base SR / VT / VF classifier"]
+    B --> C["Prediction, probabilities, logits, embedding"]
+    C --> D["Reliability evidence layer"]
+
+    D --> E1["Softmax VT/VF ambiguity"]
+    D --> E2["Validity-domain boundary evidence"]
+    D --> E3["Wavelet / time-frequency boundary risk"]
+    D --> E4["Representation conflict and kNN mixing"]
+    D --> E5["Regularity / atypical signal evidence"]
+    D --> E6["Hidden confident-error evidence"]
+
+    E1 --> F["Stage 1: VT/VF boundary-first gate"]
+    E2 --> F
+    E3 --> F
+
+    F -->|High boundary risk| G["Route to VT/VF review or {VT,VF} set"]
+    F -->|Not boundary-dominant| H["Stage 2: residual mechanism router"]
+
+    E4 --> H
+    E5 --> H
+    E6 --> H
+
+    H -->|Residual risk selected| I["Route to mechanism-specific review"]
+    H -->|Low residual risk| J["Automatic single-label output"]
+
+    G --> K["Fixed action budget evaluation"]
+    I --> K
+    J --> K
+```
+
 Across ten paired duplicate-family splits, v5d with a 20% residual-budget
 reserve achieved the following at a 20% action budget:
 
@@ -450,6 +508,28 @@ reserve achieved the following at a 20% action budget:
 | --- | ---: | ---: | ---: |
 | v4 optimized mechanism router | 82.6% | 87.9% | 0.82% |
 | v5d, 20% residual reserve | 86.0% | 99.0% | 0.07% |
+
+### Internal Stress Test For Dataset Size Effects
+
+Because the dataset is internal and not large, the project tested whether the
+router might be benefiting from a favorable validation split or a small number
+of concentrated duplicate-family clusters.
+
+The validation downsampling audit reduced the amount of validation evidence
+used by the boundary-first router. VT/VF capture remained stable: at a 10%
+action budget, capture was 90.3% with 25% validation evidence and 90.4% with
+the full validation evidence. At a 20% action budget, both settings captured
+about 99.7% of VT/VF cross-errors.
+
+The cluster concentration audit found that some VT/VF capture was concentrated
+in a small number of duplicate-family clusters, so the analysis also removed
+the largest cluster and reevaluated capture. Without the top cluster, VT/VF
+capture remained 76.6% at a 10% action budget and 99.3% at a 20% action
+budget.
+
+This does not replace external validation. It does, however, make the internal
+claim more credible: the v5d result is not only a one-split validation artifact
+or a single-cluster effect.
 
 This is the cleanest final method statement:
 

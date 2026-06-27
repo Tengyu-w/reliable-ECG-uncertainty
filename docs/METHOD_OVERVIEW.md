@@ -50,6 +50,8 @@ The project tests whether the failure can be solved inside the model:
 
 The main lesson is careful: model-side structure can improve some evidence,
 but representation improvement alone does not guarantee safer VT/VF decisions.
+Embedding-derived evidence is therefore used as a validated routing signal, not
+as a standalone proof that a representation-regularized classifier is safer.
 
 ## Final Decision Policy
 
@@ -63,8 +65,46 @@ v5d is the policy layer. It separates two decisions:
 2. Residual mechanism routing for SR-ventricular confusion, representation
    conflict, atypical signal behavior, and hidden confident errors.
 
+```mermaid
+flowchart TD
+    A["ECG window"] --> B["Base SR / VT / VF classifier"]
+    B --> C["Prediction, probabilities, logits, embedding"]
+    C --> D["Reliability evidence layer"]
+
+    D --> E1["Softmax VT/VF ambiguity"]
+    D --> E2["Validity-domain boundary evidence"]
+    D --> E3["Wavelet / time-frequency boundary risk"]
+    D --> E4["Representation conflict and kNN mixing"]
+    D --> E5["Regularity / atypical signal evidence"]
+    D --> E6["Hidden confident-error evidence"]
+
+    E1 --> F["Stage 1: VT/VF boundary-first gate"]
+    E2 --> F
+    E3 --> F
+
+    F -->|High boundary risk| G["Route to VT/VF review or {VT,VF} set"]
+    F -->|Not boundary-dominant| H["Stage 2: residual mechanism router"]
+
+    E4 --> H
+    E5 --> H
+    E6 --> H
+
+    H -->|Residual risk selected| I["Route to mechanism-specific review"]
+    H -->|Low residual risk| J["Automatic single-label output"]
+
+    G --> K["Fixed action budget evaluation"]
+    I --> K
+    J --> K
+```
+
 This is why the final method is described as mechanism-separated hierarchical
 review routing, not as a single uncertainty score.
+
+The routing policy is also stress-tested internally. Validation downsampling
+and duplicate-family cluster concentration audits are used to check whether the
+result is only caused by a favorable validation split or one dominant cluster.
+These tests do not replace external validation, but they strengthen the
+internal reliability claim.
 
 ## Evaluation Views
 

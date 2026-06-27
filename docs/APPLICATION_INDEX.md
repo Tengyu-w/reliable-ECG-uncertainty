@@ -51,8 +51,10 @@ Suggested wording:
 | Accuracy alone is insufficient. | Backbone comparison reports accuracy, macro-F1, calibration, uncertainty, representation geometry, and review-routing behavior. | Strong framing evidence. |
 | VT/VF is the central fragile boundary. | Embedding geometry, local neighborhood mixing, and boundary-error analyses show VT/VF ambiguity. | Strong internal diagnostic evidence. |
 | Model-side structure is useful but not sufficient. | CNN-LSTM, PRO, ProRisk/Risk-Pro-readable, CNN-TCN-Validity, and wavelet variants reveal improvements, failures, and error migration. | Strong mechanistic evidence, not a final classifier claim. |
+| Embedding evidence is used carefully. | Representation analysis explains failure mechanisms, but intervention results show that embedding improvement alone does not guarantee safer VT/VF decisions. | Important negative-result discipline. |
 | RISK is a useful evidence score. | Duplicate-family RISK tables show strong fixed-budget review capture, especially for VT/VF boundary errors. | Promising internal evidence. |
 | v5d is the final decision policy. | Ten paired duplicate-family splits show improved VT/VF cross-error capture and lower unresolved VT/VF rate versus v4 routing. | Strongest current internal method result. |
+| Dataset-size concerns are stress-tested. | Validation downsampling and cluster-concentration audits check whether routing gains are only one-split or one-cluster artifacts. | Useful internal robustness evidence, not external validation. |
 
 ## What Is Shown
 

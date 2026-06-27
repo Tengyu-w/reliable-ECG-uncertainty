@@ -45,6 +45,7 @@ The project has eight technical layers:
 | Negative result | Representation separation does not guarantee safer VT/VF decisions. |
 | Structured interventions | PRO, ProRisk/Risk-Pro-readable, CNN-LSTM, CNN-TCN-Validity, wavelet variants. |
 | Final policy | v5d boundary-first routing plus residual mechanism budget. |
+| Stress test | Validation downsampling and cluster-concentration audits reduce small-sample-artifact concerns. |
 | Public evidence | Aggregate tables and figures only; raw ECG is excluded. |
 
 ## Strongest Current Result
