@@ -199,6 +199,18 @@ hidden confident error
 
 这些机制类别来自前面的证据库，而不是人工随便命名。
 
+VT/VF 项目中的机制对应关系如下：
+
+| 最终机制 | 来源于哪些分析 | 它在模拟什么 | 为什么这么连 |
+| --- | --- | --- | --- |
+| `vtvf_boundary` | VT/VF softmax ambiguity、prob margin、logit margin、prototype VT/VF ambiguity、KNN VT/VF mixing、validity boundary、wavelet boundary risk | 样本卡在 VT 和 VF 之间，单标签强判不可靠 | 如果 VT/VF 概率接近、embedding 邻居混、时频边界证据高，说明这不是普通错误，而是核心边界错误 |
+| `representation_conflict` | nearest prototype、classifier-prototype disagreement、KNN prediction disagreement、prototype distance、embedding neighborhood | 表征空间说一套，分类头说另一套 | 如果最近原型/邻居支持的类别和模型预测不一致，说明内部证据冲突 |
+| `atypical_signal` | KNN distance、prototype distance、latent cluster distance、regularity features、spectral bandwidth、line length、frequency/entropy 特征 | 这个 ECG window 不像训练集中常见样本，或者形态/频域异常 | 如果样本远离训练邻域，同时信号频谱/节律特征异常，更像“样本本身 atypical”而不是纯分类边界 |
+| `sr_ventricular` | SR vs ventricular probability、ventricular_prob、pred_is_vtvf、prototype SR/VT/VF distance、regularity、cluster evidence | SR 和 ventricular 大类混淆 | SR 与 VT/VF 的错误和 VT/VF 内部互错不一样，所以单独建机制 |
+| `hidden_confident` | max probability 高、entropy 低、KNN entropy 低、second model 也不反对，但最后仍错 | 最危险的一类：模型很自信，看起来也稳定，但其实错了 | 这类不能靠普通 uncertainty 抓，因为它“不表现得不确定”，所以单独作为 hidden failure |
+| `validity_boundary` | validity gate、boundary score、gate x boundary、low-validity confidence | 样本落在模型有效域边缘 | validity 模型不是问“分类是什么”，而是问“这个区域模型有没有资格自信判断” |
+| `wavelet_boundary` | multi-scale wavelet stats、oscillation/shape/slope energy、wavelet VT/VF boundary risk | VT/VF 边界在时频形态上有风险 | 有些 VT/VF 差异不是 softmax 或 embedding 先看出来，而是多尺度波形结构更敏感 |
+
 迁移模板：
 
 ```text
@@ -509,4 +521,3 @@ with cross-fitting to avoid test leakage.
 > 本项目提出的不是单一不确定性分数，而是一套可迁移的机制感知可靠性框架：
 > 先通过表征、置信度、局部邻域和领域特征识别高风险错误机制，再验证这些机制
 > 是否真的捕获下游错误，最后将其组织为分层路由或反哺模型训练的机制标签。
-
