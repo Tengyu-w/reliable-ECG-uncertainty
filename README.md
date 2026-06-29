@@ -145,6 +145,21 @@ This is why the final contribution is best described as:
 | 9. Frozen encoder comparison | A lightweight self-supervised frozen ECG encoder was tested. | This checks whether the pipeline can later plug into a real ECG foundation model. | Useful baseline, not yet an external foundation-model validation. |
 | 10. Explanation reliability audit | Each explanation family was tested against the error type it claims to explain. | Interpretability should be evaluated, not only visualized. | Boundary and representation explanations align best; regularity and hidden-confidence explanations need more cautious wording. |
 
+The key transition is not simply "embedding analysis followed by routing."
+Representation analysis first identified where the classifier failed: VT/VF
+samples were often locally mixed in embedding, prototype, and kNN space. The
+project then used those findings to design model-side interventions such as
+PRO, ProRisk/Risk-Pro-readable, CNN-LSTM, CNN-TCN-Validity, and wavelet-boundary
+variants. These models showed that representation structure, temporal evidence,
+validity-domain evidence, and time-frequency evidence can all become more
+organized or more interpretable, but this does not guarantee safer VT/VF
+classification; errors can remain or migrate into new directions. Therefore,
+the final router uses not only embedding evidence, but also the data and signal
+properties revealed by those failed or imperfect model analyses. Embedding,
+prototype, kNN, softmax, regularity, validity-domain, wavelet, and
+model-disagreement evidence are all converted into mechanism-specific routing
+signals.
+
 For the full stage-ordered report, see
 [docs/RESEARCH_REPORT.md](docs/RESEARCH_REPORT.md).
 
