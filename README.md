@@ -216,6 +216,23 @@ This distinction is important:
   downstream error capture, not when it is treated as proof that the classifier
   has become safer.
 
+The table below is the bridge from imperfect model-side intervention to the
+final routing design. These models were not discarded as failed attempts; each
+one exposed a different reason why a single classifier or a single embedding
+constraint is not enough for VT/VF reliability.
+
+| Model or intervention | Structural idea | What was analyzed | Failure or limitation found | How it supports mechanism routing |
+| --- | --- | --- | --- | --- |
+| CNN / TCN / ResNet / InceptionTime | Test whether stronger backbones solve SR/VT/VF classification. | Accuracy, macro-F1, ECE, confusion matrix, VT/VF cross-errors, and embedding separation. | Stronger aggregate classifiers still leave clinically important VT/VF boundary errors. | The problem is not only insufficient model capacity; boundary errors need explicit routing. |
+| CNN-LSTM temporal model | Add recurrent temporal context after CNN features. | CNN vs CNN-LSTM across ten seeds, VT/VF errors, embedding silhouette, softmax boundary AUROC, and calibration. | Some VT/VF cross-errors decrease, but accuracy, calibration, and total-error behavior remain unstable. | Temporal evidence is useful, but should become one evidence family rather than the final decision rule. |
+| PRO / prototype separation | Add prototype or class-center pressure to reshape the embedding boundary. | Prototype distance, normalized VT/VF separation, silhouette, kNN mixing, and duplicate-family error migration. | Representation geometry can improve while VT/VF reliability worsens under stricter validation. | Embedding structure is diagnostic evidence, not proof that the classifier is safer. |
+| ProRisk | Add reliability-aware pressure during model training. | Teacher vs ProRisk metrics, validity scores, latent strata, boundary-error AUROC, and VT/VF cross-errors. | ProRisk changes internal structure but does not provide stable improvement across all error types. | Reliability constraints reveal mechanisms, but still need downstream routing validation. |
+| Risk-Pro-readable / readable variant | Make risk evidence more interpretable through readable or second-opinion style signals. | Model disagreement, second-model probabilities, both-agree-wrong cases, confidence, and entropy. | Two models can agree and still be confidently wrong. | This motivates a separate hidden-confident route rather than relying on ordinary uncertainty. |
+| CNN-TCN-Validity V2 | Combine temporal features with a validity-domain gate. | Validity gate, boundary score, gate x boundary, low-validity confidence, and validity-domain review curves. | Validity evidence identifies regions where the model should not be trusted, but does not fully repair classification. | Validity is better used as a routing gate: "is this region safe for automatic judgment?" |
+| CNN-Wavelet-TCN Boundary | Add multi-scale wavelet and time-frequency boundary evidence. | Wavelet energy, slope/oscillation/shape statistics, fine-to-coarse energy, and wavelet VT/VF boundary risk. | Time-frequency evidence detects some VT/VF boundary risk, but does not remove all boundary errors. | Wavelet evidence becomes a boundary-specific route rather than a standalone classifier claim. |
+| RegularityFusion / GatedFusion | Inject ECG-domain rhythm and morphology features. | Spectral entropy, dominant frequency, autocorrelation, line length, regularity atypicality, and review-routing behavior. | Signal regularity explains atypical windows but not every error type. | Atypical-signal failures should be routed separately from pure VT/VF boundary failures. |
+| RISK head / risk distillation | Distill post-hoc uncertainty and neighborhood evidence into a review score. | Entropy, MSP, kNN, prototype risk, local instability, VT/VF mixing, review curves, and capture at fixed budgets. | A single score is useful but compresses heterogeneous failures into one ranking. | This motivates v5d: boundary-first routing plus reserved residual mechanism routing. |
+
 This is why the final system uses representation evidence inside the routing
 policy. It does not claim that embedding regularization alone solves VT/VF
 classification.
