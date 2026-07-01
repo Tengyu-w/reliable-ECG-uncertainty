@@ -18,18 +18,26 @@ review before an automated prediction is accepted.
 
 ## Project In One Sentence
 
-This project starts from ordinary SR/VT/VF ECG classification, finds that the
-fragile part is the VT/VF boundary rather than overall accuracy, tests multiple
-neural architectures and representation interventions, then converts the
-useful failure evidence into a multi-mechanism hierarchical review-routing
-policy.
+This project starts from ordinary SR/VT/VF ECG classification, shows that the
+fragile part is the VT/VF boundary rather than aggregate accuracy, then turns
+representation, neighborhood, prototype, waveform, and uncertainty analyses
+into explicit mechanism constraints and review-routing policies. The central
+method is not "add more modules"; it is to test whether each mechanism changes
+the model outcome without sacrificing safety-relevant objectives.
 
 The final GitHub framing is:
 
-- `RISK` is the core reliability evidence score.
-- `v5d` mechanism-separated hierarchical routing is the final decision policy.
-- The strongest claim is internal review-routing reliability under stricter
-  duplicate-family validation, not clinical validation.
+- Model-layer causal-style ablations connect each proposed constraint to
+  measurable outcomes such as accuracy, macro-F1, ECE, VT/VF cross-errors,
+  total errors, and error migration.
+- A mechanism-derived model search tests whether the old boundary-prototype
+  candidate can be simplified into a smaller boundary-plus-center constraint,
+  or whether the full VT/VF margin remains necessary.
+- `RISK` and `v5d` form the downstream recover/review layer: a
+  mechanism-separated hierarchical policy for capturing residual high-risk
+  errors under fixed review budgets.
+- The strongest claim is internal reliability evidence under paired seeds and
+  stricter duplicate-family validation, not clinical validation.
 
 ## How The Research Logic Evolved
 
@@ -38,25 +46,31 @@ The project is best read as a staged research story.
 1. Define the problem: classify short ECG windows into `SR`, `VT`, and `VF`.
 2. Discover the main failure mode: `VT` and `VF` are much closer in learned
    representation space than `SR` is to either ventricular rhythm.
-3. Train multiple model families: CNN, TCN, ResNet1D, InceptionTime, BiGRU,
-   regularity-fusion models, gated-fusion models, and CNN-LSTM style temporal
-   variants.
+3. Compare simple and temporal baselines first: CNN and CNN-LSTM establish
+   that temporal modeling can change VT/VF behavior, but does not by itself
+   solve calibration, total-error, or boundary reliability.
 4. Analyze failures beyond accuracy: embedding geometry, PCA projections,
    normalized center distances, kNN neighborhoods, prototype distances,
    local VT/VF mixing, regularity features, calibration, OOD corruption, and
    selective prediction.
-5. Test whether structure can be improved inside the model: prototype/PRO
-   intervention, ProRisk/Risk-Pro-readable constraints, RISK-aware training,
-   CNN-LSTM and CNN/TCN-style temporal upgrades, validity-domain evidence, and
-   wavelet/time-frequency boundary evidence.
-6. Learn the key negative result: better-looking representations do not
-   automatically mean safer VT/VF classification. A model can separate
-   embeddings more cleanly while still migrating errors into another clinically
-   important direction.
-7. Convert analysis into review routing: instead of trusting a single improved
+5. Build the first evidence-fusion models, including GatedFusion and related
+   constrained models. These improve some representations, but do not
+   automatically prove safer VT/VF classification.
+6. Learn the key negative result: a representation can look cleaner while
+   outcome-level errors remain, migrate, or worsen. This is why the project
+   introduces outcome guards instead of trusting embedding plots alone.
+7. Run mechanism-targeted causal-style ablations: `do(boundary weighting)`,
+   `do(prototype center)`, `do(VT/VF prototype margin)`,
+   `do(contrastive local-purity control)`, `do(gate alignment)`, and
+   `do(regularity auxiliary learning)`.
+8. Use the ablation results to construct a mechanism-derived model search:
+   test which parts of the old boundary-prototype model are truly necessary,
+   especially whether `boundary + prototype center` is sufficient or whether
+   the full VT/VF margin must be retained.
+9. Convert residual evidence into review routing: instead of trusting one
    classifier, use the evidence families to decide which samples need review.
-8. Upgrade single-score RISK into `v5d`: a mechanism-separated hierarchical
-   router with a VT/VF boundary-first branch and a residual mechanism branch.
+10. Upgrade single-score RISK into `v5d`: a mechanism-separated hierarchical
+    router with a VT/VF boundary-first branch and a residual mechanism branch.
 
 The resulting chain is:
 
@@ -64,17 +78,25 @@ The resulting chain is:
 SR/VT/VF task
   -> backbone models
   -> representation and signal-level failure analysis
-  -> constrained and structured model interventions
-  -> RISK evidence score
+  -> mechanism-targeted causal-style ablation
+  -> mechanism-derived model constraint search
+  -> RISK evidence and recover signals
   -> v5d multi-mechanism review-routing policy
   -> fixed-budget error-capture evaluation
 ```
 
 ## Key Finding
 
-High overall accuracy was not enough. The important question became whether
-the system can identify the errors that matter most under a fixed review
-budget.
+High overall accuracy was not enough. The important question became whether a
+model change truly improves outcome-level reliability, and whether the remaining
+high-risk errors can be captured under a fixed review budget.
+
+The final research logic has two connected layers:
+
+1. A model layer tests explicit mechanism constraints and rejects changes that
+   only improve representation appearance while harming outcome guards.
+2. A routing/recover layer uses mechanism evidence to catch residual errors
+   that the classifier should not automatically decide.
 
 The final decision policy is not a single uncertainty score. It is a
 hierarchical routing mechanism:
@@ -140,10 +162,12 @@ This is why the final contribution is best described as:
 | 4. Uncertainty and calibration | MSP, entropy, temperature scaling, energy score, conformal sets, and selective prediction. | A reliable classifier should express when a forced single label is unsafe. | Softmax uncertainty is useful; energy is weak/inverted here; conformal `{VT,VF}` sets are a useful baseline but not the final decision policy. |
 | 5. Signal and OOD analysis | Regularity features, corruption tests, degradation sensitivity, and waveform-level evidence. | Some failures come from signal quality or rhythm morphology, not only embeddings. | Regularity and corruption evidence help explain risk, but severe degradation remains a limitation. |
 | 6. Constrained and structured models | PRO/prototype separation, ProRisk/Risk-Pro-readable constraints, RISK-aware variants, CNN-LSTM/CNN-TCN style temporal upgrades, validity-domain and wavelet evidence. | The project tested whether structural changes inside the model solve the boundary problem. | Some representation metrics improve, but safer VT/VF classification is not guaranteed; error migration is real. |
-| 7. RISK evidence score | Multi-source reliability evidence was distilled into a review-priority score. | The practical question is which windows should be reviewed. | RISK is a strong evidence layer, especially for VT/VF boundary capture under fixed budgets. |
-| 8. v5d hierarchical router | RISK was upgraded into a multi-mechanism decision policy. | Different errors need different routing logic. | Boundary-first plus residual mechanism routing is the strongest final method. |
-| 9. Frozen encoder comparison | A lightweight self-supervised frozen ECG encoder was tested. | This checks whether the pipeline can later plug into a real ECG foundation model. | Useful baseline, not yet an external foundation-model validation. |
-| 10. Explanation reliability audit | Each explanation family was tested against the error type it claims to explain. | Interpretability should be evaluated, not only visualized. | Boundary and representation explanations align best; regularity and hidden-confidence explanations need more cautious wording. |
+| 7. Mechanism-targeted causal-style ablation | Boundary weighting, prototype center, VT/VF prototype margin, contrastive local-purity control, gate-boundary alignment, and regularity auxiliary learning were intervened on separately. | This asks whether a mechanism changes both its target representation variable and the final outcome. | Boundary and prototype-center mechanisms are strong; margin, gate, contrastive, and regularity require guarded interpretation. |
+| 8. Mechanism-derived model search | Candidate constraints are recomposed from the 33-run mechanism evidence rather than chosen only as heuristic weights. | The model layer should explain which constraint weights are necessary, not just report a high-scoring model. | The active question is whether `boundary + center` is sufficient, or whether the full boundary-prototype margin is needed. |
+| 9. RISK evidence score | Multi-source reliability evidence was distilled into a review-priority score. | The practical question is which windows should be reviewed. | RISK is a strong evidence layer, especially for VT/VF boundary capture under fixed budgets. |
+| 10. v5d hierarchical router | RISK was upgraded into a multi-mechanism decision policy. | Different errors need different routing logic. | Boundary-first plus residual mechanism routing is the strongest downstream recover strategy. |
+| 11. Frozen encoder comparison | A lightweight self-supervised frozen ECG encoder was tested. | This checks whether the pipeline can later plug into a real ECG foundation model. | Useful baseline, not yet an external foundation-model validation. |
+| 12. Explanation reliability audit | Each explanation family was tested against the error type it claims to explain. | Interpretability should be evaluated, not only visualized. | Boundary and representation explanations align best; regularity and hidden-confidence explanations need more cautious wording. |
 
 The key transition is not simply "embedding analysis followed by routing."
 Representation analysis first identified where the classifier failed: VT/VF
@@ -194,6 +218,69 @@ that architectural improvements can reduce some VT/VF cross-errors and improve
 some embedding geometry. However, they also reinforced the main lesson:
 representation separation alone is not a sufficient reliability criterion.
 
+## Mechanism-Derived Model Layer
+
+After the first GatedFusion and constrained-model experiments, the project did
+not treat the best-looking representation as the final answer. Instead, it
+converted the representation and reliability analyses into explicit,
+testable constraint weights.
+
+The older boundary-prototype candidate used four main constraint terms:
+
+```text
+boundary_ce_weight = 0.75
+prototype_center_weight = 0.02
+prototype_margin_weight = 0.05
+prototype_vtvf_margin = 1.0
+```
+
+Those terms have different sources:
+
+| Constraint | Mechanism source | Intended effect |
+| --- | --- | --- |
+| `boundary_ce_weight` | VT/VF softmax ambiguity and high-risk boundary samples | Upweight risky boundary windows in cross-entropy. |
+| `prototype_center_weight` | Loose class clusters, low local purity, and unstable embedding neighborhoods | Encourage within-class compactness. |
+| `prototype_margin_weight` | VT/VF prototype ambiguity and insufficient class-center separation | Penalize VT and VF centers that remain too close. |
+| `prototype_vtvf_margin` | Desired VT/VF prototype separation target | Define the distance threshold used by the margin penalty. |
+
+The 33-run mechanism-targeted ablation then tested these and related
+mechanisms separately. It showed that prototype-center compactness and
+boundary weighting are strong candidates, while prototype margin alone,
+regularity auxiliary learning, and gate-boundary alignment require more
+cautious interpretation. Therefore, the current model-layer search does not
+blindly add all mechanisms. It asks whether the older four-term model can be
+explained or simplified by a smaller mechanism-derived candidate:
+
+```text
+boundary075_center:
+  boundary_ce_weight = 0.75
+  prototype_center_weight = 0.02
+```
+
+The active comparison is:
+
+```text
+boundary only
+vs prototype center only
+vs prototype margin only
+vs center + margin
+vs boundary + center
+vs boundary + margin
+vs boundary + center + margin
+```
+
+This is the bridge between mechanism analysis and model choice. A constraint is
+kept only if it improves model outcomes without harming safety-relevant guards:
+
+```text
+accuracy, macro-F1, ECE, VT/VF cross-errors, total errors, error migration
+```
+
+The mechanism-derived search plan is documented in
+[docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md).
+The 33-run mechanism quantification is summarized in
+[docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md).
+
 ## What Was Learned From The Model Interventions
 
 The project did not simply add constraints and claim success. It used those
@@ -211,9 +298,16 @@ The answer was mixed.
 - But improved representation shape does not always reduce VT/VF errors.
 - Some interventions move errors into another class direction, which is error
   migration rather than a solved boundary problem.
+- Not every useful mechanism can be added directly to the training objective:
+  regularity, validity/gate, stability, and explanation signals are often more
+  reliable as diagnostic or routing evidence than as main classifier losses.
+- The final model layer should therefore be the smallest mechanism-supported
+  constraint set that passes outcome guards, not the largest possible
+  multi-loss network.
 
-This negative result is central. It is why the final method became a routing
-system instead of only another classifier architecture.
+This negative result is central. It is why the final method has two layers: a
+mechanism-derived classifier constraint search, followed by a routing/recover
+system for the errors that remain.
 
 ## Why Embedding Evidence Is Used For Routing
 
@@ -301,12 +395,17 @@ Public v5d figures:
 
 ![v5d hierarchical router](results_public/figures/12_v5d_hierarchical_router/contact_sheet.png)
 
-## Recent Public Upgrades
+## Recent Research Upgrades
 
-Three upgrades were added before GitHub presentation.
+Recent upgrades added the causal-style mechanism and model-selection layer on
+top of the older review-routing evidence.
 
 | Upgrade | Location | Purpose |
 | --- | --- | --- |
+| 33-run mechanism-targeted ablation | `docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md` | Quantify how boundary, prototype, KNN/contrastive, gate, and regularity interventions affect mechanisms and outcomes. |
+| Mechanism-derived model search | `docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md` | Recompose model constraints from validated mechanisms instead of relying on heuristic weights alone. |
+| Model-layer benchmark | `docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md` | Compare CNN, CNN-LSTM, prototype, boundary/risk, and complex constrained models under model-only outcomes. |
+| V5D causal-Pareto routing upgrade | `docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md` | Tune stage1/stage2 routing weights while preserving VT/VF capture and residual-risk guards. |
 | v5d hierarchical router figures | `results_public/figures/12_v5d_hierarchical_router/` | Show the final multi-mechanism routing policy and budget behavior. |
 | Frozen self-supervised encoder comparison | `results_public/figures/13_frozen_ssl_encoder/` | Provide a foundation-model-ready baseline without claiming external validation. |
 | Explanation reliability audit | `results_public/figures/14_explanation_reliability/` | Evaluate whether explanation families actually match their intended error mechanisms. |
@@ -349,10 +448,13 @@ If you are reviewing this repository for PhD fit, start here:
 
 1. [Application index](docs/APPLICATION_INDEX.md)
 2. [PhD application project brief](docs/phd_application_project_brief.md)
-3. [Experiment evidence summary](docs/EXPERIMENT_EVIDENCE_SUMMARY.md)
-4. [Evidence index](docs/evidence_index.md)
-5. [Research report](docs/RESEARCH_REPORT.md)
-6. [Figure atlas](docs/FIGURE_ATLAS.md)
+3. [Mechanism-targeted causal full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md)
+4. [Mechanism-derived model search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
+5. [V5D causal-Pareto weight upgrade](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
+6. [Experiment evidence summary](docs/EXPERIMENT_EVIDENCE_SUMMARY.md)
+7. [Evidence index](docs/evidence_index.md)
+8. [Research report](docs/RESEARCH_REPORT.md)
+9. [Figure atlas](docs/FIGURE_ATLAS.md)
 
 The intended application framing is trustworthy medical machine learning,
 uncertainty estimation, and review-routing reliability. It should not be
@@ -380,9 +482,17 @@ requirements.txt          Minimal Python dependencies
 - `src/embedding_geometry_analysis.py`: representation-space analysis
 - `src/ambiguity_analysis.py`: VT/VF boundary ambiguity analysis
 - `src/review_efficiency_analysis.py`: review burden and error-capture curves
+- `src/run_mechanism_targeted_causal_ablation.py`: component-level mechanism
+  interventions for boundary, prototype, contrastive, gate, and regularity
+- `src/summarize_mechanism_targeted_causal_quantification.py`: paired
+  intervention-mechanism-outcome quantification
+- `src/run_model_layer_causal_pareto_search.py`: mechanism-derived model
+  constraint recomposition and Pareto outcome guards
 - `src/evidence_informed_recovery_routing.py`: mechanism evidence routing
 - `src/boundary_first_router_v5b.py`: VT/VF boundary-first router
 - `src/hierarchical_router_v5d_reserved_budget.py`: final v5d reserved-budget router
+- `src/run_v5d_causal_pareto_weight_upgrade.py`: stage1/stage2 routing weight
+  intervention inside the V5D policy
 - `src/frozen_ssl_encoder_comparison.py`: frozen self-supervised encoder comparison
 - `src/explanation_reliability_audit.py`: explanation-to-error-mechanism audit
 - `src/generate_github_visual_pack.py`: public GitHub figure generation
@@ -407,6 +517,19 @@ python -m src.review_efficiency_analysis --run-dir results\<run-name>
 
 The raw ECG file is expected locally as `RHYTHMS.mat`, but it is not included in
 this repository.
+
+Mechanism-level experiments use the same local data file:
+
+```powershell
+# Component-level mechanism ablation.
+python -m src.run_mechanism_targeted_causal_ablation --seeds 42 43 44 --epochs 30
+
+# Mechanism-derived model search.
+python -m src.run_model_layer_causal_pareto_search --candidate-set mechanism-derived --seeds 42 43 44 --epochs 30
+
+# V5D stage1/stage2 routing weight intervention.
+python -m src.run_v5d_causal_pareto_weight_upgrade --budgets 0.20
+```
 
 ## Data And Scope
 
