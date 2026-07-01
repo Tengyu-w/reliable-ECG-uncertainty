@@ -35,6 +35,17 @@ The central contribution is the model-layer mechanism analysis and constraint
 selection. The recover/router layer is retained as a downstream safety fallback
 for residual high-risk errors.
 
+## Claim-To-Evidence Matrix
+
+| Main claim | Evidence used | Where to look |
+| --- | --- | --- |
+| High accuracy hides a VT/VF-specific reliability problem. | CNN/CNN-LSTM comparisons show VT/VF cross-errors behave differently from overall accuracy. | [paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv), [model_performance_summary.png](results_public/figures/00_summary/model_performance_summary.png) |
+| VT/VF confusion has representation-level structure. | Embedding geometry, local KNN purity, prototype ambiguity, and softmax ambiguity show boundary mixing. | [embedding PCA figures](results_public/figures/01_embedding_pca/), [MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md](docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md) |
+| Representation improvement alone is not enough. | PRO/prototype and regularity-style experiments can improve structure while leaving outcome trade-offs or error migration. | [PRO geometry figures](results_public/figures/06_pro_geometry/), [PRO error migration figures](results_public/figures/10_v6_pro_error_migration/) |
+| Mechanism constraints must be evaluated by outcomes. | The 33-run mechanism-targeted ablation links each intervention to accuracy, macro-F1, ECE, VT/VF cross-errors, total errors, and migration. | [MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
+| The next model should be mechanism-derived rather than heuristic. | Current search tests whether `boundary + center` is sufficient or whether the full boundary-prototype margin is necessary. | [MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) |
+| Recover is a fallback layer, not the main model contribution. | V5D stage1/stage2 routing catches residual high-risk errors under fixed review budgets. | [V5D results](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md), [V5D figures](results_public/figures/12_v5d_hierarchical_router/) |
+
 ## 1. Problem Definition: Accuracy Hides VT/VF Confusion
 
 The first stage compares conventional classifiers such as CNN and CNN-LSTM.
@@ -64,6 +75,21 @@ Evidence:
 - Public performance figure:
 
 ![Model performance summary](results_public/figures/00_summary/model_performance_summary.png)
+
+## Model Evolution
+
+The model sequence is not presented as a leaderboard. Each stage tests a
+specific hypothesis and motivates the next one.
+
+| Model stage | Why introduced | What improved | What remained unresolved | What it motivated |
+| --- | --- | --- | --- | --- |
+| CNN | Establish a conventional short-window ECG baseline. | Basic SR/VT/VF classification. | VT/VF boundary errors remain hidden by aggregate accuracy. | Define VT/VF confusion as the core reliability problem. |
+| CNN-LSTM | Add temporal context after CNN features. | VT/VF cross-errors decrease relative to CNN. | Accuracy, ECE, and total errors worsen on average. | Separate "boundary improvement" from general reliability. |
+| GatedFusion | Fuse learned representation with regularity/reliability-style evidence. | Stronger aggregate model behavior and a better backbone. | It does not explain which mechanism produces the improvement. | Move from architecture comparison to mechanism analysis. |
+| PRO / prototype / RiskPro-style constraints | Reshape representation geometry and risk-aware structure. | Some embedding and prototype measures improve. | Better-looking representations can still cause outcome trade-offs or error migration. | Introduce outcome guards and causal-style ablation. |
+| Mechanism-targeted ablation | Test each mechanism as a controlled intervention. | Boundary and prototype-center mechanisms show strong evidence. | Margin, contrastive, gate, and regularity are not all safe to add directly. | Construct mechanism-derived model candidates. |
+| Mechanism-derived search | Recompose the final model from validated mechanisms. | Active validation: test `boundary + center` versus the older four-term candidate. | Pending final 3-seed result. | Select the final model-layer constraint set. |
+| V5D / recover | Catch residual high-risk cases after model prediction. | VT/VF boundary capture improves under fixed review budgets. | Not a replacement for model improvement. | Provides the final safety fallback layer. |
 
 ## 2. Mechanism Analysis: Why VT/VF Are Confused
 
@@ -214,6 +240,24 @@ smallest sufficient mechanism-supported constraint set.
 
 Active model-search plan:
 [docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
+
+### Active Validation Candidates
+
+The current validation run is not an open-ended search over arbitrary losses.
+It is a targeted decomposition of the old boundary-prototype model.
+
+| Candidate | Constraint structure | Purpose |
+| --- | --- | --- |
+| `boundary075` | `boundary_ce_weight=0.75` | Test the boundary-risk term alone. |
+| `proto_center_only` | `prototype_center_weight=0.02` | Test whether class compactness is the main prototype contribution. |
+| `proto_margin_only` | `prototype_margin_weight=0.05`, `prototype_vtvf_margin=1.0` | Test whether VT/VF margin works without center compactness. |
+| `proto_center_margin` | `center=0.02`, `margin=0.05`, `vtvf_margin=1.0` | Test the prototype-only combination. |
+| `boundary075_center` | `boundary=0.75`, `center=0.02` | Main new candidate: boundary risk plus prototype compactness. |
+| `boundary075_margin` | `boundary=0.75`, `margin=0.05`, `vtvf_margin=1.0` | Test whether margin adds value without center. |
+| `boundary075_prototype` | `boundary=0.75`, `center=0.02`, `margin=0.05`, `vtvf_margin=1.0` | Older four-term reference candidate. |
+| `boundary050_center` / `boundary100_center` | boundary dose `0.50` or `1.00` with center fixed | Check whether the boundary dose is sensitive. |
+| `boundary075_contrastive` | `boundary=0.75`, `contrastive=0.02` | Test whether KNN/local-purity control can replace the prototype path. |
+| `boundary075_center_calibrated` | `boundary=0.75`, `center=0.02`, entropy/confidence terms | Test whether calibration can be added without sacrificing VT/VF safety. |
 
 ## 6. Multi-Objective Selection Logic
 
