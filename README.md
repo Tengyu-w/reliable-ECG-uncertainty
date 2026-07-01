@@ -7,164 +7,148 @@ rhythm labels:
 - `VT`: ventricular tachycardia
 - `VF`: ventricular fibrillation
 
-The project is not framed as a general accuracy-improvement exercise. Its main
-question is:
+The central problem is not ordinary classification accuracy. The project asks
+why VT and VF remain confusable even when aggregate accuracy is high, how this
+confusion appears in representation and signal-level evidence, and which
+mechanism-aware training constraints can reduce the boundary risk without
+damaging calibration or causing error migration.
 
-> Why do VT and VF remain confusable even when overall ECG classification
-> accuracy is high, and which mechanism-aware constraints can reduce that
-> boundary risk without causing calibration failure or error migration?
+> Research prototype only. This repository is not a medical device, does not
+> provide clinical validation, and must not be used for diagnosis or clinical
+> decision-making.
 
-This is a research prototype only. It is not a medical device, is not clinical
-validation, and must not be used for diagnosis or clinical decision-making.
+## Research Story
 
-## Core Narrative
-
-The current paper logic is:
+The paper logic is organized as a sequence of controlled hypotheses:
 
 ```text
-CNN / CNN-LSTM baselines
-  -> VT/VF boundary problem definition
-  -> representation-layer and signal-level mechanism analysis
-  -> GatedFusion and constrained-model attempts
-  -> mechanism-targeted causal-style ablation
-  -> mechanism-derived model constraint search
-  -> Stage 1 / Stage 2 recover routing as a fallback
+1. Traditional CNN / CNN-LSTM baselines
+   -> show that high aggregate accuracy can hide VT/VF boundary confusion
+
+2. Representation and signal-level analysis
+   -> explain why VT/VF are mixed in embedding, KNN, prototype, softmax,
+      waveform, and validity evidence
+
+3. First model upgrades
+   -> GatedFusion and constrained models show that evidence fusion helps,
+      but representation improvement alone is not enough
+
+4. Mechanism-targeted causal-style ablation
+   -> test which mechanism constraints truly change outcomes
+
+5. Mechanism-derived model search
+   -> build the next model from validated constraints rather than heuristic
+      weight choices
+
+6. Stage 1 / Stage 2 recover routing
+   -> provide a fallback for residual high-risk cases under fixed review
+      budgets
 ```
 
-The central contribution is the model-layer mechanism analysis and constraint
-selection. The recover/router layer is retained as a downstream safety fallback
-for residual high-risk errors.
+The main contribution is therefore the **model-layer mechanism evidence chain**:
 
-## Claim-To-Evidence Matrix
+```text
+observed VT/VF failure
+  -> measured mechanism variables
+  -> explicit training constraints
+  -> multi-objective outcome guard
+  -> mechanism-derived model candidate
+```
 
-| Main claim | Evidence used | Where to look |
-| --- | --- | --- |
-| High accuracy hides a VT/VF-specific reliability problem. | CNN/CNN-LSTM comparisons show VT/VF cross-errors behave differently from overall accuracy. | [paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv), [model_performance_summary.png](results_public/figures/00_summary/model_performance_summary.png) |
-| VT/VF confusion has representation-level structure. | Embedding geometry, local KNN purity, prototype ambiguity, and softmax ambiguity show boundary mixing. | [embedding PCA figures](results_public/figures/01_embedding_pca/), [MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md](docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md) |
-| Representation improvement alone is not enough. | PRO/prototype and regularity-style experiments can improve structure while leaving outcome trade-offs or error migration. | [PRO geometry figures](results_public/figures/06_pro_geometry/), [PRO error migration figures](results_public/figures/10_v6_pro_error_migration/) |
-| Mechanism constraints must be evaluated by outcomes. | The 33-run mechanism-targeted ablation links each intervention to accuracy, macro-F1, ECE, VT/VF cross-errors, total errors, and migration. | [MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
-| The next model should be mechanism-derived rather than heuristic. | Current search tests whether `boundary + center` is sufficient or whether the full boundary-prototype margin is necessary. | [MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) |
-| Recover is a fallback layer, not the main model contribution. | V5D stage1/stage2 routing catches residual high-risk errors under fixed review budgets. | [V5D results](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md), [V5D figures](results_public/figures/12_v5d_hierarchical_router/) |
+The recover/router layer is important, but it is a downstream fallback rather
+than the primary model contribution.
 
-## 1. Problem Definition: Accuracy Hides VT/VF Confusion
+## 1. Defining The Problem: VT/VF Confusion Is Hidden By Accuracy
 
-The first stage compares conventional classifiers such as CNN and CNN-LSTM.
-Overall accuracy can look acceptable because the dataset contains many easier
-SR or non-boundary windows. The reliability issue is concentrated in the VT/VF
-boundary: VT and VF are both ventricular rhythms, and the model can confuse
-them even when aggregate metrics look strong.
+The first stage compares conventional CNN and CNN-LSTM classifiers. CNN gives a
+reasonable baseline, and CNN-LSTM adds temporal context. However, the important
+finding is that overall accuracy does not describe the reliability problem.
+The clinically relevant failure mode is concentrated in the VT/VF boundary.
 
-CNN-LSTM provides an important partial positive result. It reduces VT/VF
-cross-errors relative to CNN, but does not solve the full reliability problem:
-accuracy and calibration are worse, and total errors increase.
+CNN-LSTM reduces VT/VF cross-errors relative to CNN, but its accuracy,
+calibration, and total-error behavior are worse. This motivates a more precise
+problem definition: the project must explain and reduce VT/VF boundary
+confusion, not simply maximize aggregate accuracy.
 
 | Metric | CNN mean | CNN-LSTM mean | Interpretation |
 | --- | ---: | ---: | --- |
 | Accuracy | 0.8649 | 0.8518 | CNN-LSTM is lower. |
 | Macro-F1 | 0.5928 | 0.6145 | CNN-LSTM improves class-balanced F1. |
 | ECE | 0.0670 | 0.0747 | CNN-LSTM is less calibrated. |
-| Total errors | 589.5 | 640.9 | CNN-LSTM makes more errors overall. |
+| Total errors | 589.5 | 640.9 | CNN-LSTM has more total errors. |
 | VT/VF cross-errors | 232.4 | 183.1 | CNN-LSTM reduces the key boundary error. |
 
 Evidence:
 
-- Model and geometry summary:
-  [results_public/tables/model_performance_and_geometry.csv](results_public/tables/model_performance_and_geometry.csv)
-- Paired CNN/CNN-LSTM comparisons:
-  [results_public/tables/paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv)
-- Public performance figure:
+- [paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv)
+- [model_performance_and_geometry.csv](results_public/tables/model_performance_and_geometry.csv)
 
 ![Model performance summary](results_public/figures/00_summary/model_performance_summary.png)
 
-## Model Evolution
+## 2. Mechanism Diagnosis: Why VT/VF Are Confused
 
-The model sequence is not presented as a leaderboard. Each stage tests a
-specific hypothesis and motivates the next one.
+After defining the VT/VF boundary problem, the project analyzes where the
+confusion comes from. The analysis does not rely on a single embedding plot.
+It compares multiple mechanism families:
 
-| Model stage | Why introduced | What improved | What remained unresolved | What it motivated |
-| --- | --- | --- | --- | --- |
-| CNN | Establish a conventional short-window ECG baseline. | Basic SR/VT/VF classification. | VT/VF boundary errors remain hidden by aggregate accuracy. | Define VT/VF confusion as the core reliability problem. |
-| CNN-LSTM | Add temporal context after CNN features. | VT/VF cross-errors decrease relative to CNN. | Accuracy, ECE, and total errors worsen on average. | Separate "boundary improvement" from general reliability. |
-| GatedFusion | Fuse learned representation with regularity/reliability-style evidence. | Stronger aggregate model behavior and a better backbone. | It does not explain which mechanism produces the improvement. | Move from architecture comparison to mechanism analysis. |
-| PRO / prototype / RiskPro-style constraints | Reshape representation geometry and risk-aware structure. | Some embedding and prototype measures improve. | Better-looking representations can still cause outcome trade-offs or error migration. | Introduce outcome guards and causal-style ablation. |
-| Mechanism-targeted ablation | Test each mechanism as a controlled intervention. | Boundary and prototype-center mechanisms show strong evidence. | Margin, contrastive, gate, and regularity are not all safe to add directly. | Construct mechanism-derived model candidates. |
-| Mechanism-derived search | Recompose the final model from validated mechanisms. | Active validation: test `boundary + center` versus the older four-term candidate. | Pending final 3-seed result. | Select the final model-layer constraint set. |
-| V5D / recover | Catch residual high-risk cases after model prediction. | VT/VF boundary capture improves under fixed review budgets. | Not a replacement for model improvement. | Provides the final safety fallback layer. |
-
-## 2. Mechanism Analysis: Why VT/VF Are Confused
-
-After defining the VT/VF boundary problem, the project analyzes why it happens.
-The failure is not treated as a random classification error. It is studied
-through multiple measurable mechanisms:
-
-| Mechanism family | What it measures | Why it matters |
+| Mechanism family | Evidence measured | Role in the project |
 | --- | --- | --- |
-| Embedding geometry | PCA/LDA projections, silhouette, class-center distances | Tests whether VT and VF are separated in learned representation space. |
-| KNN neighborhood structure | Local purity, label entropy, VT/VF local mixing | Tests whether a sample is surrounded by conflicting rhythm labels. |
-| Prototype ambiguity | Distance to VT and VF class prototypes | Tests whether a sample is geometrically ambiguous between VT and VF. |
-| Softmax ambiguity | Entropy, probability margin, VT/VF ambiguity score | Tests whether the classifier expresses uncertainty at the boundary. |
-| Waveform regularity | Spectral entropy, dominant frequency, autocorrelation, line length | Tests whether ECG signal structure explains boundary or atypical cases. |
-| Gate/validity evidence | Validity gate, boundary score, gate-boundary interaction | Tests whether the model has learned regions where automatic prediction is unsafe. |
+| Embedding geometry | PCA/LDA projections, silhouette, class-center distance | Shows whether VT and VF separate in representation space. |
+| KNN neighborhood structure | Local purity, label entropy, VT/VF local mixing | Shows whether a sample is surrounded by conflicting labels. |
+| Prototype ambiguity | Distances to VT and VF class prototypes | Shows whether a sample is geometrically ambiguous between VT and VF. |
+| Softmax ambiguity | Entropy, probability margin, VT/VF ambiguity | Shows whether the classifier expresses uncertainty at the boundary. |
+| Waveform regularity | Spectral entropy, dominant frequency, autocorrelation, line length | Shows whether ECG rhythm structure explains atypical cases. |
+| Gate / validity evidence | Validity gate, boundary score, gate-boundary interaction | Shows whether the model has learned unsafe automatic-decision regions. |
 
-The key representation finding is that VT/VF errors are associated with local
-mixing and ambiguity in embedding, prototype, KNN, and softmax space. This
-motivates model constraints that target specific mechanisms rather than simply
-adding a larger neural network.
+These analyses indicate that VT/VF errors are structured: they occur where
+representation neighborhoods, prototypes, probabilities, and waveform evidence
+become ambiguous. This is why the next step is not simply a larger network, but
+a mechanism-aware model design.
 
 Visual evidence:
 
 ![Embedding geometry](results_public/figures/01_embedding_pca/contact_sheet.png)
 
-Additional evidence:
+More evidence:
 
-- Embedding and geometry figures:
-  [results_public/figures/01_embedding_pca/](results_public/figures/01_embedding_pca/)
-- Regularity and waveform features:
-  [results_public/figures/03_regularity_interpretability/](results_public/figures/03_regularity_interpretability/)
-- Mechanism variable inventory:
-  [docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md](docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md)
+- [Embedding PCA figures](results_public/figures/01_embedding_pca/)
+- [Regularity and waveform figures](results_public/figures/03_regularity_interpretability/)
+- [Mechanism variable inventory](docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md)
 
-## 3. First Model Upgrade: GatedFusion Is Useful But Not Sufficient
+## 3. Model Evolution: What Improved And What Failed
 
-The project then tests whether mechanism evidence can be integrated into the
-classifier. GatedFusion and related models combine learned ECG representations
-with regularity or reliability-style evidence. This improves aggregate
-classification behavior and provides a stronger backbone than plain CNN-style
-baselines.
+The project then tests whether model upgrades can solve the boundary problem.
+This stage is not a leaderboard; each model tests a specific hypothesis.
 
-However, GatedFusion alone does not answer the central causal question:
-
-> Which mechanism changed, and did that mechanism actually improve the final
-> outcome rather than only making the representation look cleaner?
-
-This distinction matters because several experiments showed that representation
-improvement can be misleading. A model can separate embeddings more cleanly
-while still moving errors into another clinically important direction. This is
-why the project moves from ordinary model comparison to mechanism-targeted
-intervention and multi-objective outcome guards.
+| Model stage | Why introduced | What improved | What remained unresolved | What it motivated |
+| --- | --- | --- | --- | --- |
+| CNN | Establish a conventional baseline. | Basic SR/VT/VF classification. | VT/VF boundary errors remain hidden by aggregate accuracy. | Define the boundary problem. |
+| CNN-LSTM | Add temporal context. | VT/VF cross-errors decrease. | Accuracy, ECE, and total errors worsen. | Separate boundary improvement from overall reliability. |
+| GatedFusion | Fuse learned representation with regularity/reliability evidence. | Stronger aggregate backbone. | It does not identify which mechanism caused improvement. | Move to mechanism-level analysis. |
+| PRO / prototype / RiskPro-style constraints | Reshape geometry and risk-aware structure. | Some representation measures improve. | Improved geometry can still produce trade-offs or error migration. | Add outcome guards. |
+| Mechanism-targeted ablation | Intervene on individual mechanisms. | Boundary and prototype-center mechanisms show strong evidence. | Not every mechanism is safe to add directly. | Build mechanism-derived candidates. |
+| Mechanism-derived model search | Recompose the model from validated constraints. | Active validation: `boundary + center` vs old four-term model. | Final result pending. | Select final model-layer constraint set. |
+| V5D / recover | Catch residual high-risk cases. | Fixed-budget VT/VF capture improves. | It is a fallback, not the main classifier. | Complete the safety-oriented workflow. |
 
 Evidence:
 
-- PRO / prototype geometry:
-  [results_public/figures/06_pro_geometry/](results_public/figures/06_pro_geometry/)
-- PRO error migration:
-  [results_public/figures/10_v6_pro_error_migration/](results_public/figures/10_v6_pro_error_migration/)
-- Full model benchmark:
-  [docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md)
+- [Model-layer all-model benchmark](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md)
+- [PRO geometry figures](results_public/figures/06_pro_geometry/)
+- [PRO error migration figures](results_public/figures/10_v6_pro_error_migration/)
 
 ![Prototype geometry and safety coupling](results_public/figures/06_pro_geometry/contact_sheet.png)
 
 ## 4. Mechanism-Targeted Causal-Style Ablation
 
-The next stage treats model constraints as interventions:
+The key upgrade is to treat training constraints as interventions:
 
 ```text
 do(training constraint)
-  -> measured mechanism change
+  -> measured mechanism variable change
   -> model outcome change
 ```
 
-The outcomes are not limited to accuracy. A candidate must be checked against:
+The outcomes are:
 
 ```text
 accuracy
@@ -175,7 +159,7 @@ total errors
 error migration penalty
 ```
 
-The 33-run mechanism-targeted ablation tests 11 candidates across 3 paired
+The 33-run mechanism-targeted experiment tests 11 candidates across 3 paired
 seeds. Representative paired mean effects relative to baseline are:
 
 | Candidate | Mechanism tested | Accuracy | Macro-F1 | ECE | VT/VF cross-errors | Total errors | Migration penalty |
@@ -191,33 +175,34 @@ Interpretation:
 
 - Prototype center compactness is a strong mechanism.
 - Prototype margin alone is weak.
-- Boundary weighting improves global errors but does not fully solve VT/VF
-  cross-errors by itself.
-- Prototype plus contrastive can improve some representation signals while
-  worsening VT/VF cross-errors.
+- Boundary weighting is useful but does not fully solve VT/VF cross-errors by
+  itself.
+- Prototype plus contrastive can improve some mechanism signals while worsening
+  VT/VF cross-errors.
 - Regularity evidence is useful diagnostically, but direct auxiliary training
-  is not stable enough to enter the main model objective.
+  is unstable as a main loss.
 
-Full evidence:
+Full results:
 [docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md)
 
-## 5. From Mechanism Analysis To Model Weights
+## 5. From Mechanism Analysis To Constraint Weights
 
-The mechanism analysis is translated into explicit constraint weights. This is
-the bridge between representation analysis and final model construction.
+The mechanism analysis determines which constraints should be tested in the
+model. Each weight is a bridge between an observed failure mode and a training
+intervention.
 
-| Analysis source | Constraint weight | Intended model effect | Current evidence |
+| Analysis source | Constraint weight | Intended effect | Current interpretation |
 | --- | --- | --- | --- |
-| VT/VF softmax ambiguity and boundary risk | `boundary_ce_weight` | Upweight high-risk boundary samples in CE loss | Useful, but needs representation constraint support. |
-| Loose class clusters and low local purity | `prototype_center_weight` | Make within-class embeddings more compact | Strong single-mechanism result. |
-| VT/VF prototype ambiguity | `prototype_margin_weight` | Penalize insufficient VT/VF prototype separation | Weak alone; must be tested with center/boundary. |
-| Desired VT/VF separation target | `prototype_vtvf_margin` | Define margin threshold for VT/VF centers | Only meaningful when margin loss is active. |
-| KNN local mixing | `contrastive_weight` | Improve local neighborhood purity | Strong alone, but can conflict with prototype constraints. |
-| Calibration/overconfidence | `risk_entropy_weight`, `anti_confident_risk_weight` | Align uncertainty with risk and reduce confident high-risk errors | Kept as a guarded add-on, not a main mechanism yet. |
-| Regularity features | `regularity_aux_weight` | Encourage embedding to encode waveform attributes | Useful diagnostically; unstable as direct loss. |
-| Gate/validity evidence | `risk_gate_weight`, `risk_boundary_weight` | Align gate/boundary heads with risk targets | Better suited for routing/recover evidence. |
+| VT/VF softmax ambiguity and boundary risk | `boundary_ce_weight` | Upweight high-risk boundary samples in CE loss. | Useful, but needs representation support. |
+| Loose class clusters and low local purity | `prototype_center_weight` | Make within-class embeddings more compact. | Strong single-mechanism result. |
+| VT/VF prototype ambiguity | `prototype_margin_weight` | Penalize insufficient VT/VF prototype separation. | Weak alone; must be tested with center/boundary. |
+| Desired VT/VF separation target | `prototype_vtvf_margin` | Define the margin threshold for VT/VF centers. | Only meaningful when margin loss is active. |
+| KNN local mixing | `contrastive_weight` | Improve local neighborhood purity. | Strong alone, but may conflict with prototype constraints. |
+| Calibration / overconfidence | `risk_entropy_weight`, `anti_confident_risk_weight` | Align uncertainty with risk and reduce confident high-risk errors. | Guarded add-on, not the main mechanism. |
+| Waveform regularity | `regularity_aux_weight` | Encourage embeddings to encode ECG waveform attributes. | Diagnostic evidence; unstable as direct loss. |
+| Gate / validity evidence | `risk_gate_weight`, `risk_boundary_weight` | Align gate and boundary heads with risk targets. | Better suited for routing/recover evidence. |
 
-The old four-term boundary-prototype candidate was:
+The older four-term boundary-prototype candidate was:
 
 ```text
 boundary_ce_weight = 0.75
@@ -226,7 +211,7 @@ prototype_margin_weight = 0.05
 prototype_vtvf_margin = 1.0
 ```
 
-The current mechanism-derived model search asks whether all four terms are
+The active mechanism-derived model search asks whether all four terms are
 necessary, or whether the model can be simplified to:
 
 ```text
@@ -238,44 +223,49 @@ boundary075_center:
 This is not a preference for a smaller neural network. It is a search for the
 smallest sufficient mechanism-supported constraint set.
 
-Active model-search plan:
+Active search plan:
 [docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
 
-### Active Validation Candidates
+## 6. Active Validation: Decomposing The Old Four-Weight Model
 
-The current validation run is not an open-ended search over arbitrary losses.
-It is a targeted decomposition of the old boundary-prototype model.
+The current validation run is a targeted decomposition of the older
+`boundary075_prototype` model.
 
 | Candidate | Constraint structure | Purpose |
 | --- | --- | --- |
-| `boundary075` | `boundary_ce_weight=0.75` | Test the boundary-risk term alone. |
+| `boundary075` | `boundary_ce_weight=0.75` | Test boundary-risk weighting alone. |
 | `proto_center_only` | `prototype_center_weight=0.02` | Test whether class compactness is the main prototype contribution. |
 | `proto_margin_only` | `prototype_margin_weight=0.05`, `prototype_vtvf_margin=1.0` | Test whether VT/VF margin works without center compactness. |
 | `proto_center_margin` | `center=0.02`, `margin=0.05`, `vtvf_margin=1.0` | Test the prototype-only combination. |
 | `boundary075_center` | `boundary=0.75`, `center=0.02` | Main new candidate: boundary risk plus prototype compactness. |
 | `boundary075_margin` | `boundary=0.75`, `margin=0.05`, `vtvf_margin=1.0` | Test whether margin adds value without center. |
 | `boundary075_prototype` | `boundary=0.75`, `center=0.02`, `margin=0.05`, `vtvf_margin=1.0` | Older four-term reference candidate. |
-| `boundary050_center` / `boundary100_center` | boundary dose `0.50` or `1.00` with center fixed | Check whether the boundary dose is sensitive. |
+| `boundary050_center` / `boundary100_center` | boundary dose `0.50` or `1.00` with center fixed | Test boundary-dose sensitivity. |
 | `boundary075_contrastive` | `boundary=0.75`, `contrastive=0.02` | Test whether KNN/local-purity control can replace the prototype path. |
 | `boundary075_center_calibrated` | `boundary=0.75`, `center=0.02`, entropy/confidence terms | Test whether calibration can be added without sacrificing VT/VF safety. |
 
-## 6. Multi-Objective Selection Logic
+The result of this run will determine whether the final model remains the
+four-term boundary-prototype candidate or becomes a simpler boundary-plus-center
+model.
 
-The model is not selected by a single score. The selection logic is Pareto-style
-and safety-guarded:
+## 7. Multi-Objective Selection
 
-1. A candidate should improve or preserve classification performance.
-2. It should reduce VT/VF cross-errors or avoid making them worse.
-3. It should not sacrifice calibration.
-4. It should reduce total errors and error migration.
-5. Its mechanism should be interpretable from the earlier analysis.
+The final model is not selected by one metric. A candidate must satisfy a
+multi-objective guard:
 
-This is why not all mechanisms are added to the final training objective.
-Mechanisms such as regularity, validity/gate, stability, and explanation heads
-remain important evidence sources, but they are not automatically valid
-classifier losses.
+1. Preserve or improve accuracy.
+2. Improve macro-F1.
+3. Reduce or preserve ECE.
+4. Reduce or avoid increasing VT/VF cross-errors.
+5. Reduce total errors.
+6. Reduce error migration penalty.
+7. Remain interpretable through the mechanism evidence that motivated it.
 
-Mechanism-outcome association evidence:
+This is why the project does not simply add all mechanisms to one large loss.
+Some mechanisms are better used as diagnostic or routing evidence rather than
+as classifier training terms.
+
+Strong mechanism-outcome associations from the 33-run quantification include:
 
 | Mechanism variable | Outcome | Association |
 | --- | --- | --- |
@@ -285,13 +275,12 @@ Mechanism-outcome association evidence:
 | `knn_label_entropy_mean` | Accuracy | Spearman -0.735 |
 | `entropy_mean` | Accuracy | Spearman -0.663 |
 
-These are internal causal-style proxies, not biological causal claims.
+These are internal causal-style proxies, not formal biological causal claims.
 
-## 7. Recover / V5D As A Fallback Layer
+## 8. Recover / V5D As A Fallback Layer
 
-The recover layer is placed after the model layer. Its purpose is not to replace
-the classifier, but to handle residual high-risk errors under limited review
-resources.
+Recover is placed after the model layer. Its purpose is to handle residual
+high-risk errors under limited review resources.
 
 | Stage | Target | Evidence used |
 | --- | --- | --- |
@@ -305,22 +294,21 @@ At a 20% action budget:
 | v4 optimized mechanism router | 82.6% | 87.9% | 0.82% |
 | v5d, 20% residual reserve | 86.0% | 99.0% | 0.07% |
 
-Visual evidence:
-
 ![V5D hierarchical router](results_public/figures/12_v5d_hierarchical_router/contact_sheet.png)
 
-Routing evidence:
+V5D evidence:
 [docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
 
-## Current Status
+## Claim-To-Evidence Index
 
-| Layer | Status | Evidence |
+| Claim | Evidence | Source |
 | --- | --- | --- |
-| CNN / CNN-LSTM baseline comparison | Complete | [results_public/tables/paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv) |
-| Representation and mechanism analysis | Complete as internal evidence | [docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md](docs/MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md) |
-| 33-run mechanism-targeted ablation | Complete | [docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
-| Mechanism-derived model search | Active validation | [docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) |
-| V5D recover routing | Complete as fallback evidence | [docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md) |
+| VT/VF is the key reliability boundary. | CNN/CNN-LSTM cross-error comparison and representation mixing. | [paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv), [embedding figures](results_public/figures/01_embedding_pca/) |
+| Representation improvement does not guarantee safer outcomes. | PRO and regularity-style experiments show trade-offs and migration. | [PRO geometry](results_public/figures/06_pro_geometry/), [PRO migration](results_public/figures/10_v6_pro_error_migration/) |
+| Prototype center is a strong mechanism. | `proto_center_only` improves all reported model outcomes in the 33-run ablation. | [Mechanism full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
+| Boundary weighting is useful but insufficient alone. | `boundary075` improves global errors but gives smaller VT/VF cross-error reduction. | [Mechanism full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
+| The final model should be mechanism-derived. | Current search decomposes boundary, center, margin, contrastive, and calibration components. | [Mechanism-derived search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) |
+| Recover is a fallback. | V5D captures residual high-risk errors under fixed review budgets. | [V5D results](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md) |
 
 ## Repository Map
 
@@ -344,16 +332,12 @@ results_public/
 
 ## Main Documents
 
-Start with these documents:
-
 1. [Mechanism-targeted causal full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md)
 2. [Mechanism-derived model search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
 3. [Model-layer all-model benchmark](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md)
 4. [V5D causal-Pareto weight upgrade](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
 5. [Thesis method section draft](docs/THESIS_METHOD_SECTION_CAUSAL_MECHANISM_CN.md)
-
-Full documentation guide:
-[docs/README.md](docs/README.md)
+6. [Full documentation guide](docs/README.md)
 
 ## Reproduce Key Experiments
 
