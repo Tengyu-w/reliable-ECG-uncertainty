@@ -357,6 +357,19 @@ def write_report(summary: pd.DataFrame, absolute: pd.DataFrame, mechanism: pd.Da
 - baseline：`reliability_gated_fusion` without extra model-layer constraint
 - 核心 outcomes：accuracy、macro-F1、ECE、VT/VF cross-errors、total errors、error migration penalty
 
+## 防止“拿自己的钥匙开自己的锁”
+
+本项目确实做过这一层防护，但需要在论文里明确写出来。核心原则是：机制分析用于生成候选约束，最终模型选择不能只靠同一套机制指标自证成功。
+
+具体做法有四点：
+
+1. 数据划分层面：使用 record-level / duplicate-family split audit，避免同一来源记录或近重复窗口跨 train/test 造成泄漏。公开证据见 `results_public/tables/duplicate_family_*` 和 `dataset_split_statistics.csv`。
+2. 机制发现层面：embedding、KNN local purity、prototype ambiguity、softmax entropy、waveform regularity 等只作为候选机制来源，不单独作为最终成功标准。
+3. 干预验证层面：每个候选模型与同 seed baseline 做 paired comparison，只改变训练约束权重，观察 outcome delta。
+4. 选择层面：最终选择依据是 outcome guard，包括 accuracy、macro-F1、ECE、VT/VF cross-errors、total errors 和 error migration penalty，而不是某一张 embedding 图或某一个机制变量变好。
+
+因此，`proto_center_only` 被推荐为主候选，并不是因为它让 prototype/embedding 指标看起来更好，而是因为它在 matched-seed outcome guard 上同时改善六个目标。表征可视化仍然有用，但角色是解释机制，不是替代 outcome validation。
+
 ## 传统模型对照在论文中的位置
 
 这份报告的核心是最终机制约束模型选择；传统模型负责论文前段的问题定义。CNN/CNN-LSTM 的 10-seed 证据说明：CNN-LSTM 能降低部分 VT/VF 互错并改善整体 embedding silhouette，但同时 accuracy、ECE 和 total errors 并不全面占优。因此传统模型不是最终答案，而是引出“VT/VF boundary confusion 需要机制解释和 outcome guard”的起点。

@@ -37,6 +37,21 @@ next step is larger full validation and, if permitted by the dissertation
 module and ethics/data rules, external validation. The repository should be
 described as a **research prototype**, not as a validated ECG diagnosis system.
 
+## Protocol Guard: Avoiding Circular Evidence
+
+The project explicitly separates mechanism discovery from model selection, so
+it does not simply "use its own key to open its own lock."
+
+- Split safety is audited with record-level and duplicate-family checks; public
+  duplicate-family summaries are provided under `results_public/tables/`.
+- Mechanism variables such as embedding geometry, KNN local purity, prototype
+  ambiguity, entropy, and waveform regularity generate candidate constraints,
+  but they are not accepted as success criteria by themselves.
+- Final model selection is based on paired outcome guards: accuracy, macro-F1,
+  ECE, VT/VF cross-errors, total errors, and error migration penalty.
+- Visualizations and representation metrics are used as explanation evidence,
+  while the model claim is decided by outcome changes under matched seeds.
+
 ## Research Story
 
 The paper logic is organized as a sequence of controlled hypotheses:
