@@ -320,6 +320,12 @@ These are internal causal-style proxies, not formal biological causal claims.
 Recover is placed after the model layer. Its purpose is to handle residual
 high-risk errors under limited review resources.
 
+![V5D mechanism evidence router](results_public/figures/12_v5d_hierarchical_router/individual_figures/fig_089_v5d_mechanism_evidence_router.png)
+
+The diagram above is the CGR-style mechanism view of the recover layer: the
+analysis evidence is not collapsed into one vague score, but routed into
+specific failure mechanisms before Stage 1 / Stage 2 review decisions are made.
+
 | Stage | Target | Evidence used |
 | --- | --- | --- |
 | Stage 1: VT/VF boundary-first protection | Samples near the VT/VF boundary | Softmax ambiguity, validity-boundary evidence, wavelet risk, prototype ambiguity, KNN mixing |
@@ -332,7 +338,7 @@ At a 20% action budget:
 | v4 optimized mechanism router | 82.6% | 87.9% | 0.82% |
 | v5d, 20% residual reserve | 86.0% | 99.0% | 0.07% |
 
-![V5D hierarchical router](results_public/figures/12_v5d_hierarchical_router/contact_sheet.png)
+![V5D budget and routing results](results_public/figures/12_v5d_hierarchical_router/contact_sheet.png)
 
 V5D evidence:
 [docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
