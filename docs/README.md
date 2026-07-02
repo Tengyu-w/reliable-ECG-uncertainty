@@ -16,6 +16,7 @@ model-choice argument.
 | --- | --- | --- |
 | 2 min | [Project README](../README.md) | Main contribution, result snapshot, and limitations. |
 | 5 min | [Final model selection report](FINAL_MODEL_SELECTION_REPORT_CN.md) | Completed 36-run mechanism-derived model selection, main candidate, controls, figures, and limitations. |
+| 2 min demo | [Synthetic quick demo](../quick_demo/synthetic_quick_demo.py) | Runs a non-clinical toy pipeline without `RHYTHMS.mat`; useful only as a public smoke test. |
 | 5 min | [PhD application brief](phd_application_project_brief.md) | Short supervisor-facing project pitch. |
 | 10 min | [Experiment evidence summary](EXPERIMENT_EVIDENCE_SUMMARY.md) | The full research logic in one compact document. |
 | Taxonomy | [Mechanism routing taxonomy](MECHANISM_ROUTING_TAXONOMY_CN.md) | Evidence head vs complete router vs recovery action comparison rules. |
@@ -65,8 +66,8 @@ model-choice argument.
   full model-stage benchmark including CNN, CNN-LSTM, PRO/prototype,
   constrained models, and complex multi-objective training variants.
 - [MODEL_LAYER_CAUSAL_PARETO_SEARCH_PLAN_CN.md](MODEL_LAYER_CAUSAL_PARETO_SEARCH_PLAN_CN.md):
-  active model-layer causal-Pareto recombination search over the strongest
-  old constraints.
+  earlier model-layer causal-Pareto recombination plan over the strongest
+  old constraints, retained as historical context.
 - [MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md):
   second-stage model search that uses the 33-run mechanism ablation to test
   whether `boundary + prototype center` is sufficient or whether the full

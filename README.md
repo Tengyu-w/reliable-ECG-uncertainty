@@ -17,6 +17,26 @@ damaging calibration or causing error migration.
 > provide clinical validation, and must not be used for diagnosis or clinical
 > decision-making.
 
+## For Supervisors: Read These 3 Files First
+
+This repository contains many scripts because it preserves the full research
+trail. For a fast review, start here:
+
+1. [Final model selection report](docs/FINAL_MODEL_SELECTION_REPORT_CN.md):
+   the completed 36-run internal mechanism-derived search, selected main
+   candidate, controls, figures, and limitations.
+2. [Mechanism-targeted causal full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md):
+   the component-level `do(training constraint) -> mechanism -> outcome`
+   evidence behind the final model choice.
+3. [Model-layer all-model benchmark](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md):
+   the broader CNN, CNN-LSTM, prototype, constrained, and complex-model
+   context.
+
+Current status: the internal 36-run mechanism-derived search is complete. The
+next step is larger full validation and, if permitted by the dissertation
+module and ethics/data rules, external validation. The repository should be
+described as a **research prototype**, not as a validated ECG diagnosis system.
+
 ## Research Story
 
 The paper logic is organized as a sequence of controlled hypotheses:
@@ -37,8 +57,8 @@ The paper logic is organized as a sequence of controlled hypotheses:
    -> test which mechanism constraints truly change outcomes
 
 5. Mechanism-derived model search
-   -> build the next model from validated constraints rather than heuristic
-      weight choices
+   -> completed 36-run internal search from validated constraints rather than
+      heuristic weight choices
 
 6. Stage 1 / Stage 2 recover routing
    -> provide a fallback for residual high-risk cases under fixed review
@@ -365,6 +385,22 @@ python -m src.run_model_layer_causal_pareto_search --candidate-set mechanism-der
 python -m src.run_v5d_causal_pareto_weight_upgrade --budgets 0.20
 ```
 
+## Quick Demo Without ECG Data
+
+The dissertation evidence depends on private/local ECG data and generated
+experiment outputs that are not distributed. To make the repository runnable
+for a first-time reviewer, a synthetic toy demo is included:
+
+```powershell
+python quick_demo\synthetic_quick_demo.py
+```
+
+The demo generates non-clinical synthetic SR/VT/VF-like waveforms, trains a
+small classifier, computes accuracy, macro-F1, ECE, VT/VF cross-errors, and
+writes a PCA/error figure under `quick_demo/output/`. It is only a smoke test
+for the public pipeline shape; it is not used as dissertation evidence and is
+not a clinical ECG simulation.
+
 ## Public Evidence Boundary
 
 The repository provides code, documentation, and aggregate non-identifiable
@@ -382,7 +418,8 @@ results_public/figures/
 
 - Evidence is internal and paired-seed based; it is not external clinical
   validation.
-- The mechanism-derived model search is still an active validation step.
+- The 36-run mechanism-derived search is complete as internal validation; the
+  next step is larger full validation and external validation if permitted.
 - Mechanism variables are post-training diagnostics and causal-style proxies,
   not formal biological mediation proof.
 - Several comparisons have only 3 paired seeds.
