@@ -6,15 +6,16 @@ experiment dump.
 
 ## Recommended Reading Order
 
-For the corrected causal-style mechanism story, start with
-[MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md](MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md).
-Earlier plan/status files are kept as context, but this full-results document
-is the current entry point for the model-layer intervention-mechanism-outcome
-evidence chain.
+For the corrected model-first mechanism story, start with
+[FINAL_MODEL_SELECTION_REPORT_CN.md](FINAL_MODEL_SELECTION_REPORT_CN.md).
+The mechanism-targeted full-results document explains the component evidence;
+the final model-selection report turns that evidence into the current
+model-choice argument.
 
 | Time | File | Purpose |
 | --- | --- | --- |
 | 2 min | [Project README](../README.md) | Main contribution, result snapshot, and limitations. |
+| 5 min | [Final model selection report](FINAL_MODEL_SELECTION_REPORT_CN.md) | Completed 36-run mechanism-derived model selection, main candidate, controls, figures, and limitations. |
 | 5 min | [PhD application brief](phd_application_project_brief.md) | Short supervisor-facing project pitch. |
 | 10 min | [Experiment evidence summary](EXPERIMENT_EVIDENCE_SUMMARY.md) | The full research logic in one compact document. |
 | Taxonomy | [Mechanism routing taxonomy](MECHANISM_ROUTING_TAXONOMY_CN.md) | Evidence head vs complete router vs recovery action comparison rules. |
@@ -24,6 +25,7 @@ evidence chain.
 | Model Benchmark | [All model-layer benchmark](MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md) | Comprehensive model-stage comparison across CNN, CNN-LSTM, PRO, constrained, and complex models. |
 | Model Search | [Model-layer causal-Pareto search](MODEL_LAYER_CAUSAL_PARETO_SEARCH_PLAN_CN.md) | Recombination search over prototype, boundary/risk, regularity, stability, and calibration constraints. |
 | Mechanism-Derived Search | [Mechanism-derived model search plan](MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) | Builds the next model candidates from the 33-run mechanism validation instead of heuristic weights alone. |
+| Final Model Selection | [Final model selection report](FINAL_MODEL_SELECTION_REPORT_CN.md) | Uses the completed 36-run search to choose `proto_center_only` as the clearest minimal sufficient candidate and define controls. |
 | Thesis Method | [Causal mechanism method section](THESIS_METHOD_SECTION_CAUSAL_MECHANISM_CN.md) | Thesis-ready method framing for causal variables, mechanism variables, outcomes, and Pareto objectives. |
 | Thesis Subsection | [Causal mechanism thesis subsection](THESIS_CAUSAL_MECHANISM_SUBSECTION_CN.md) | Compact thesis-ready subsection with the intervention-mechanism-outcome diagram and training-search clarification. |
 | Mechanism Inventory | [Mechanism variable master inventory](MECHANISM_VARIABLE_MASTER_INVENTORY_CN.md) | Full inventory of representation, KNN, prototype, softmax, validity, waveform, wavelet, risk, explanation, and routing variables. |
@@ -41,6 +43,10 @@ evidence chain.
 ## Core Documents
 
 - [APPLICATION_INDEX.md](APPLICATION_INDEX.md): advisor-facing entry point.
+- [FINAL_MODEL_SELECTION_REPORT_CN.md](FINAL_MODEL_SELECTION_REPORT_CN.md):
+  completed mechanism-derived model selection report, including traditional
+  CNN/CNN-LSTM context, candidate ranking, mechanism-to-weight bridge, figures,
+  and next full-validation recommendation.
 - [EXPERIMENT_EVIDENCE_SUMMARY.md](EXPERIMENT_EVIDENCE_SUMMARY.md): compact
   story of what was tested, why, what worked, and what failed.
 - [MECHANISM_ROUTING_TAXONOMY_CN.md](MECHANISM_ROUTING_TAXONOMY_CN.md):

@@ -127,7 +127,7 @@ This stage is not a leaderboard; each model tests a specific hypothesis.
 | GatedFusion | Fuse learned representation with regularity/reliability evidence. | Stronger aggregate backbone. | It does not identify which mechanism caused improvement. | Move to mechanism-level analysis. |
 | PRO / prototype / RiskPro-style constraints | Reshape geometry and risk-aware structure. | Some representation measures improve. | Improved geometry can still produce trade-offs or error migration. | Add outcome guards. |
 | Mechanism-targeted ablation | Intervene on individual mechanisms. | Boundary and prototype-center mechanisms show strong evidence. | Not every mechanism is safe to add directly. | Build mechanism-derived candidates. |
-| Mechanism-derived model search | Recompose the model from validated constraints. | Active validation: `boundary + center` vs old four-term model. | Final result pending. | Select final model-layer constraint set. |
+| Mechanism-derived model search | Recompose the model from validated constraints. | `proto_center_only` and `proto_center_margin` emerge as the strongest mechanism-supported candidates. | The older four-term model remains useful but is not the minimal sufficient configuration. | Select `prototype_center_weight` as the main model-layer mechanism and retain margin/boundary variants as controls. |
 | V5D / recover | Catch residual high-risk cases. | Fixed-budget VT/VF capture improves. | It is a fallback, not the main classifier. | Complete the safety-oriented workflow. |
 
 Evidence:
@@ -211,7 +211,7 @@ prototype_margin_weight = 0.05
 prototype_vtvf_margin = 1.0
 ```
 
-The active mechanism-derived model search asks whether all four terms are
+The completed mechanism-derived model search asks whether all four terms are
 necessary, or whether the model can be simplified to:
 
 ```text
@@ -221,10 +221,13 @@ boundary075_center:
 ```
 
 This is not a preference for a smaller neural network. It is a search for the
-smallest sufficient mechanism-supported constraint set.
+smallest sufficient mechanism-supported constraint set. The 36-run paired
+search shows that `proto_center_only` is currently the clearest main candidate:
+it improves all six guarded outcomes across 3/3 seeds while using only the
+prototype-center compactness constraint.
 
-Active search plan:
-[docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
+Final model selection evidence:
+[docs/FINAL_MODEL_SELECTION_REPORT_CN.md](docs/FINAL_MODEL_SELECTION_REPORT_CN.md)
 
 ## 6. Active Validation: Decomposing The Old Four-Weight Model
 
@@ -305,9 +308,9 @@ V5D evidence:
 | --- | --- | --- |
 | VT/VF is the key reliability boundary. | CNN/CNN-LSTM cross-error comparison and representation mixing. | [paired_classification_comparisons.csv](results_public/tables/paired_classification_comparisons.csv), [embedding figures](results_public/figures/01_embedding_pca/) |
 | Representation improvement does not guarantee safer outcomes. | PRO and regularity-style experiments show trade-offs and migration. | [PRO geometry](results_public/figures/06_pro_geometry/), [PRO migration](results_public/figures/10_v6_pro_error_migration/) |
-| Prototype center is a strong mechanism. | `proto_center_only` improves all reported model outcomes in the 33-run ablation. | [Mechanism full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
+| Prototype center is a strong mechanism. | `proto_center_only` improves all reported model outcomes in the mechanism-targeted ablation and the completed 36-run mechanism-derived search. | [Final model selection report](docs/FINAL_MODEL_SELECTION_REPORT_CN.md), [Mechanism full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
 | Boundary weighting is useful but insufficient alone. | `boundary075` improves global errors but gives smaller VT/VF cross-error reduction. | [Mechanism full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md) |
-| The final model should be mechanism-derived. | Current search decomposes boundary, center, margin, contrastive, and calibration components. | [Mechanism-derived search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md) |
+| The final model should be mechanism-derived. | The completed 36-run search decomposes boundary, center, margin, contrastive, and calibration components, then selects candidates by Pareto/outcome guard. | [Final model selection report](docs/FINAL_MODEL_SELECTION_REPORT_CN.md) |
 | Recover is a fallback. | V5D captures residual high-risk errors under fixed review budgets. | [V5D results](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md) |
 
 ## Repository Map
@@ -332,12 +335,13 @@ results_public/
 
 ## Main Documents
 
-1. [Mechanism-targeted causal full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md)
-2. [Mechanism-derived model search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
-3. [Model-layer all-model benchmark](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md)
-4. [V5D causal-Pareto weight upgrade](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
-5. [Thesis method section draft](docs/THESIS_METHOD_SECTION_CAUSAL_MECHANISM_CN.md)
-6. [Full documentation guide](docs/README.md)
+1. [Final model selection report](docs/FINAL_MODEL_SELECTION_REPORT_CN.md)
+2. [Mechanism-targeted causal full results](docs/MECHANISM_TARGETED_CAUSAL_FULL_RESULTS_CN.md)
+3. [Mechanism-derived model search plan](docs/MECHANISM_DERIVED_MODEL_SEARCH_PLAN_CN.md)
+4. [Model-layer all-model benchmark](docs/MODEL_LAYER_ALL_MODEL_BENCHMARK_CN.md)
+5. [V5D causal-Pareto weight upgrade](docs/V5D_CAUSAL_PARETO_WEIGHT_UPGRADE_RESULTS_CN.md)
+6. [Thesis method section draft](docs/THESIS_METHOD_SECTION_CAUSAL_MECHANISM_CN.md)
+7. [Full documentation guide](docs/README.md)
 
 ## Reproduce Key Experiments
 

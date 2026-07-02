@@ -1,0 +1,15 @@
+{
+  "result_dir": "results\\mechanism_derived_model_search_3seed_20260701",
+  "report": "docs\\FINAL_MODEL_SELECTION_REPORT_CN.md",
+  "assets": [
+    "docs\\final_model_selection_assets\\01_outcome_delta_ranking.png",
+    "docs\\final_model_selection_assets\\02_pareto_tradeoff.png",
+    "docs\\final_model_selection_assets\\03_seed_guard_consistency.png",
+    "docs\\final_model_selection_assets\\04_embedding_pca_contact_sheet_seed42.png",
+    "docs\\final_model_selection_assets\\manifest.json",
+    "docs\\final_model_selection_assets\\mechanism_weight_bridge.csv",
+    "docs\\final_model_selection_assets\\model_selection_absolute_metrics.csv",
+    "docs\\final_model_selection_assets\\model_selection_delta_summary.csv",
+    "docs\\final_model_selection_assets\\model_selection_paired_effects.csv"
+  ]
+}
