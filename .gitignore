@@ -31,7 +31,7 @@ report/
 results/
 tools/
 scripts/
-quick_demo/output/
+quick_demo/output*/
 AGENTS.md
 CODE_FUNCTION_MAP_CN.md
 INNOVATION_AND_CODE_REVIEW_CN.md
